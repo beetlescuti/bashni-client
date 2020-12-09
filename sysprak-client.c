@@ -20,14 +20,16 @@
 #define PORTNUMBER "1357"
 #define HOSTNAME "sysprak.priv.lab.nm.ifi.lmu.de"
 
+void connect_to_server(int argc, char*argv[]);
+
 int main(int argc, char*argv[]) {
-    
-    // Initialize user parameters
+
+    /* Initialize user parameters */
     char game_id[14] = {0};
     int player;
     player = -1;
-    
-    // Read in from commandline
+
+    /* Read Parameters from Commandline */
     int ret;
     while ((ret=getopt(argc, argv, "g:p:")) != -1) {
       switch (ret) {
@@ -42,22 +44,19 @@ int main(int argc, char*argv[]) {
            break;
       }
     }
+
+    /* Connect to Game Server */
+    connect_to_server(argc, argv);
     
-//    // Prepare Socket
-//    struct sockaddr_in address;
-//    int sock = socket(PF_INET, SOCK_STREAM, 0);
-//    int new_socket;
-//    address.sin_family = AF_INET;
-//    address.sin_port = htons(PORTNUMBER);
-//    address.sin_addr = HOSTNAME;
-    
-//    if(connect(sock,(struct sockaddr*) &address, sizeof(address)) == 0) {
-//      printf("Verbindung mit %s hergestellt.\n",inet_ntoa(address.sin_addr));
-//    }
-    
-    
-    
-    
+    exit(EXIT_SUCCESS);
+}
+
+
+/* This function connects the client to the server of LMU
+   NOTE: to work you must be connected using either a VPN
+   or an SSH Tunnel */
+void connect_to_server(int argc, char*argv[]) {
+
     struct addrinfo hints;
     struct addrinfo *result, *rp;
     int sfd, s;
@@ -68,7 +67,6 @@ int main(int argc, char*argv[]) {
     }
 
     /* Obtain address(es) matching host/port */
-
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;     /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM; /* Datagram socket */
@@ -82,9 +80,9 @@ int main(int argc, char*argv[]) {
     }
 
     /* getaddrinfo() returns a list of address structures.
-      Try each address until we successfully connect(2).
-      If socket(2) (or connect(2)) fails, we (close the socket
-      and) try the next address. */
+       Try each address until we successfully connect(2).
+       If socket(2) (or connect(2)) fails, we (close the socket
+       and) try the next address. */
 
     for (rp = result; rp != NULL; rp = rp->ai_next) {
         sfd = socket(rp->ai_family, rp->ai_socktype,
@@ -104,6 +102,4 @@ int main(int argc, char*argv[]) {
         fprintf(stderr, "Could not connect\n");
         exit(EXIT_FAILURE);
     }
-    
 }
-
