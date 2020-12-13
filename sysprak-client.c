@@ -20,7 +20,8 @@
 #define PORTNUMBER "1357"
 #define HOSTNAME "sysprak.priv.lab.nm.ifi.lmu.de"
 
-void connect_to_server(int argc, char*argv[]);
+int getSocketInfo(int argc, char*argv[]);
+void performConnection(int socket_file_descriptor);
 
 int main(int argc, char*argv[]) {
 
@@ -46,7 +47,11 @@ int main(int argc, char*argv[]) {
     }
 
     /* Connect to Game Server */
-    connect_to_server(argc, argv);
+    int socket_file_descriptor;
+    socket_file_descriptor = getSocketInfo(argc, argv);
+
+    /* Enter Prolog Phase */
+    performConnection(socket_file_descriptor);
     
     exit(EXIT_SUCCESS);
 }
@@ -55,11 +60,11 @@ int main(int argc, char*argv[]) {
 /* This function connects the client to the server of LMU
    NOTE: to work you must be connected using either a VPN
    or an SSH Tunnel */
-void connect_to_server(int argc, char*argv[]) {
+int getSocketInfo(int argc, char*argv[]) {
 
     struct addrinfo hints;
     struct addrinfo *result, *rp;
-    int sfd, s;
+    int socket_file_descriptor, s;
 
     if (argc < 3) {
         fprintf(stderr, "Usage: %s host port msg...\n", argv[0]);
@@ -85,15 +90,15 @@ void connect_to_server(int argc, char*argv[]) {
        and) try the next address. */
 
     for (rp = result; rp != NULL; rp = rp->ai_next) {
-        sfd = socket(rp->ai_family, rp->ai_socktype,
+        socket_file_descriptor = socket(rp->ai_family, rp->ai_socktype,
                      rp->ai_protocol);
-        if (sfd == -1)
+        if (socket_file_descriptor == -1)
             continue;
 
-        if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
+        if (connect(socket_file_descriptor, rp->ai_addr, rp->ai_addrlen) != -1)
             break;                  /* Success */
 
-        close(sfd);
+        close(socket_file_descriptor);
     }
 
     freeaddrinfo(result);           /* No longer needed */
@@ -102,4 +107,12 @@ void connect_to_server(int argc, char*argv[]) {
         fprintf(stderr, "Could not connect\n");
         exit(EXIT_FAILURE);
     }
+
+    return socket_file_descriptor;
+}
+
+/* This function houses the Prolog Phase of the 
+   connection to the server */
+void performConnection(socket_file_descriptor) {
+    printf("%i\n", socket_file_descriptor);
 }
