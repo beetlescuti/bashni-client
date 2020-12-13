@@ -16,12 +16,13 @@
 #include<stdbool.h>
 #include<netdb.h>
 
+#include "performConnection.h"
+
 #define GAMEKINDNAME "Baschni"
 #define PORTNUMBER "1357"
 #define HOSTNAME "sysprak.priv.lab.nm.ifi.lmu.de"
 
 int getSocketInfo(int argc, char*argv[]);
-void performConnection(int socket_file_descriptor);
 
 int main(int argc, char*argv[]) {
 
@@ -51,7 +52,7 @@ int main(int argc, char*argv[]) {
     socket_file_descriptor = getSocketInfo(argc, argv);
 
     /* Enter Prolog Phase */
-    performConnection(socket_file_descriptor);
+    serverConnect(socket_file_descriptor);
     
     exit(EXIT_SUCCESS);
 }
@@ -109,10 +110,4 @@ int getSocketInfo(int argc, char*argv[]) {
     }
 
     return socket_file_descriptor;
-}
-
-/* This function houses the Prolog Phase of the 
-   connection to the server */
-void performConnection(socket_file_descriptor) {
-    printf("%i\n", socket_file_descriptor);
 }

@@ -2,8 +2,8 @@ CC = gcc
 CFLAGS = -Wall -g -std=gnu11
 LDFLAGS = -lm -lpthread
 TARGETS = sysprak-client
-SRCFILES = sysprak-client.c
-OBJECTS = sysprak-client.o
+SRCFILES = sysprak-client.c performConnection.c
+OBJECTS = sysprak-client.o performConnection.o
 
 all: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TARGETS) $(OBJECTS)
