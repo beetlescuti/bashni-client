@@ -8,59 +8,66 @@
 
 #include "performConnection.h"
 
+// TO-Dos: wrap receive message (with newline as end) into function; continue with implementation of protocol  
 int serverConnect(int socket_file_descriptor) {
 
-          char server_msg[1024];
-//        char kick_off[10] = "Lets play";
-//        if(send(socket_file_descriptor, kick_off, strlen(kick_off), 0) < 0){
-//            printf("send failed\n");
-//        }
-//        else{
-//            printf("C: %s\n", kick_off);
-//    }
+        char server_msg[1024];
+        int result = 0;
+        int packets = 0;
+        int bytes_received= 0;
+        memset(server_msg, 0, 1024);
+        do
+         {
+            result =recv(socket_file_descriptor, &server_msg[bytes_received], 1024-bytes_received, 0);
+            packets++;
+            if (result > 0 )
+            {
+                bytes_received+=result;
+            }
+            else
+            {
+                printf("Error: %i \n", result);
+            }
+            if (bytes_received >= 1024)
+            { printf("Buffer overflow");
+            break;}
+         }
+         while(server_msg[bytes_received-1] != '\n');
 
-
-        int message_length = recv(socket_file_descriptor, server_msg, 1024, 0);
-
-        /* check if server is accepting connections */
-        if (message_length < 0) {
-           printf("recv failed\n");
-        }
-        else {
-          printf("Real server message from buffer: %s \n", server_msg);
-        }
-
-      //  while(strlen(server_msg) <= message_length){
-        //     printf("%lu",strlen(server_msg));
-
-          //   if ((strlen(server_msg)) == (message_length)){
-            //   printf("S: %s real server message", server_msg);
-            //    break; }}
-
+        //printf(  "S: %s bytes: %i packets: %i \n" , server_msg, bytes_received, packets);
+        printf(  "S: %s" , server_msg);
         /* send client version:
           major version must match!! */
-           char client_version[14] = "Version 2.2";
-           if(send(socket_file_descriptor, client_version, strlen(client_version), 0) < 0){
-               printf("send failed\n");
-           }
-           else{
-             //    printf("Client version that we send: %s \n", client_version);
-          }
-
-           // empty server_msg to receive a new reply
+            char client_version[14] = "VERSION 2.3\n";
+            if (send(socket_file_descriptor, client_version, strlen(client_version), 0) < 0) {
+                printf("send failed\n");
+            } else {
+                printf("C: %s", client_version);
+            }
+        result = 0;
+        packets = 0;
+        bytes_received= 0;
         memset(server_msg, 0, 1024);
-        printf("Server message should now be empty S: %s - Is it? \n", server_msg);
-
-        /* check if client version is accepted */
-        if(recv(socket_file_descriptor, server_msg, 1024, 0) < 0) {
-            printf("recv failed\n");
-       }
-        else {
-            printf("What we receive after sending our Version S: %s", server_msg);
+        do
+        {
+            result =recv(socket_file_descriptor, &server_msg[bytes_received], 1024-bytes_received, 0);
+            packets++;
+            if (result > 0 )
+            {
+                bytes_received+=result;
+            }
+            else
+            {
+                printf("Error: %i \n", result);
+            }
+            if (bytes_received >= 1024)
+            { printf("Buffer overflow");
+                break;}
         }
+        while(server_msg[bytes_received-1] != '\n');
 
-        printf("I will now sleep\n");
-        usleep(5000000);
+        // for debugging only: printf(  "S: %s bytes: %i packets: %i \n" , server_msg, bytes_received, packets);
+        printf(  "S: %s" , server_msg);
 
 
         return 0;
