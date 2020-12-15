@@ -52,7 +52,7 @@ int main(int argc, char*argv[]) {
     socket_file_descriptor = getSocketInfo(argc, argv);
 
     /* Enter Prolog Phase */
-    serverConnect(socket_file_descriptor, game_id);
+    serverConnect(socket_file_descriptor, game_id, player);
 
     exit(EXIT_SUCCESS);
 }
