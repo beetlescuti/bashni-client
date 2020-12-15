@@ -22,6 +22,9 @@
 #define PORTNUMBER "1357"
 #define HOSTNAME "sysprak.priv.lab.nm.ifi.lmu.de"
 
+
+// TODO: Errormessage when no command line arguments are passed
+// TODO: General Error handling
 int getSocketInfo(int argc, char*argv[]);
 
 int main(int argc, char*argv[]) {

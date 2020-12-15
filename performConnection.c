@@ -10,6 +10,8 @@
 
 // TODO: wrap receive message (with newline as end) into function
 // TODO: continue with implementation of protocol
+// TODO: Whenever I run it with PLAYER = 2 it says, that there is no free player ... there seems to be an off by one error; if I run it with Player =1 I always get assigned Player 2
+
 int serverConnect(int socket_file_descriptor, char game_id[], int player) {
 
     char server_msg[1024];
