@@ -1,6 +1,6 @@
 //
 //  sysprak-client.c
-//  
+//
 //
 //  Created by Soren Little on 12/9/20.
 //
@@ -52,8 +52,8 @@ int main(int argc, char*argv[]) {
     socket_file_descriptor = getSocketInfo(argc, argv);
 
     /* Enter Prolog Phase */
-    serverConnect(socket_file_descriptor);
-    
+    serverConnect(socket_file_descriptor, game_id);
+
     exit(EXIT_SUCCESS);
 }
 
