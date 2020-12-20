@@ -13,43 +13,18 @@
 // TODO: Whenever I run it with PLAYER = 2 it says, that there is no free player ... there seems to be an off by one error; if I run it with Player =1 I always get assigned Player 2
 
 char server_msg[1024];
+char client_msg[1024];
 int result;
 int packets;
 int bytes_received;
+char* dividedServerMsg[100];
 
 
 
 
-int serverConnect(int socket_file_descriptor, char game_id[], int player) {
-
-    /* Enter an infinite while loop that calls recv() and then filters the 
-       result into the correct switch/case */
-    while (1) {
-        /* Receive Bytestream from Socket to parse into cases*/
-        parseReceived(socket_file_descriptor);
-
-        /*  */
-        switch (server_msg[0]) {
-            case '+': {
-                /* use sscanf to if/else between protocol responses */
 
 
-                /* split multiple messages */
-
-                
-
-            }
-            case '-': {
-                printf("Error: %s", server_msg);
-                break;
-            }
-            default: 
-                break;
-        }
-    }
-}
-
-int parseReceived(int socket_file_descriptor) {
+void receiveServerMsg(int socket_file_descriptor) {
     /* reset old server_msg */
     result = 0;
     packets = 0;
@@ -73,6 +48,90 @@ int parseReceived(int socket_file_descriptor) {
         }
     } while(server_msg[bytes_received-1] != '\n');
 }
+
+int serverConnect(int socket_file_descriptor, char game_id[], int player) {
+
+    /* Enter an infinite while loop that calls receiveServerMsg() and then filters the
+       result into the correct switch/case */
+    while (1) {
+        /* Receive Bytestream from Socket to parse into cases*/
+        receiveServerMsg(socket_file_descriptor);
+
+        /*  */
+        switch (server_msg[0]) {
+            case '+':
+                // Divide ServerMsg into tokens so they can be adressed separately
+                *dividedServerMsg = divideServerMsg(server_msg);
+
+                for (int i = 0; i < 100; i++) {
+                  char *current = dividedServerMsg[i];
+                  char stringMatch[12];
+
+                  if (dividedServerMsg[i] != NULL) {
+
+                    printf("S: %s\n", dividedServerMsg[i]);
+
+                    if (sscanf(current, "+ MNM Gameserver %*s accepting %s", stringMatch) == 1 ) {
+                      /* send: client version, major version must match!! */
+                      strcpy(client_msg, "VERSION 2.3\n");
+                      if (send(socket_file_descriptor, client_msg, strlen(client_msg), 0) < 0) {
+                           printf("send failed\n");
+                      }
+                      else {
+                           printf("C: %s", client_msg);
+                      }
+                      memset(stringMatch, 0, 12);
+                      memset(client_msg, 0, 1024);
+                    }
+
+                    else if (sscanf(current, "+ Client version accepted - please send %s to join", stringMatch) == 1 ){
+                      strcpy(client_msg, "ID ");
+                      strcat(client_msg, game_id);
+                      strcat(client_msg, "\n");
+
+                      if (send(socket_file_descriptor, client_msg, strlen(client_msg), 0) < 0) {
+                           printf("send failed\n");
+                      }
+                      else {
+                           printf("C: %s", client_msg);
+                      }
+
+                    }
+
+                    else {
+                      perror("sscanf");
+                      fprintf(stderr, "could not parse\n");
+                      exit(EXIT_FAILURE);
+                    }
+                  }
+                }
+            case '-':
+                //For debugging
+                //printf("%c\n", server_msg[0]);
+                printf("Error: %s\n", server_msg);
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+char* divideServerMsg(char *server_msg){
+  char *saveptr;
+  char *tokenArray[1024];
+
+  int num_tokens = 0;
+  char *token;
+  char *current = server_msg;
+
+  while( (token = strtok_r(current, "\n", &saveptr)) != NULL){
+    tokenArray[num_tokens] = token;
+    num_tokens++;
+    current = NULL;
+  }
+
+  return *tokenArray;
+};
 
 // int serverConnect(int socket_file_descriptor, char game_id[], int player) {
 
