@@ -57,19 +57,24 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
         /* Receive Bytestream from Socket to parse into cases*/
         receiveServerMsg(socket_file_descriptor);
 
-        /*  */
+        /* Check first byte of server_msg to see if Server is responding with a "+ ....." or an Error message */
         switch (server_msg[0]) {
             case '+':
                 // Divide ServerMsg into tokens so they can be adressed separately
                 *dividedServerMsg = divideServerMsg(server_msg);
 
+                //Look at each of the tokens separately
                 for (int i = 0; i < 100; i++) {
                   char *current = dividedServerMsg[i];
+
+                  //This variable is used for sscanf so it can check if the token can be matched to the format string
                   char stringMatch[12];
 
                   if (dividedServerMsg[i] != NULL) {
 
                     printf("S: %s\n", dividedServerMsg[i]);
+
+                    //All the possible Server Messages and their corresponding actions by the client
 
                     if (sscanf(current, "+ MNM Gameserver %*s accepting %s", stringMatch) == 1 ) {
                       /* send: client version, major version must match!! */
@@ -95,7 +100,39 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
                       else {
                            printf("C: %s", client_msg);
                       }
+                      memset(stringMatch, 0, 12);
+                      memset(client_msg, 0, 1024);
+                    }
 
+                    //Check if the game that we want to join is a Bashni game. If it is, send preferred player number
+                    else if (sscanf(current, "+ PLAYING %s", stringMatch) == 1){
+                      if (strcmp(stringMatch, "Bashni") == 0) {
+                        //preparing client_msg
+                        strcpy(client_msg, "PLAYER");
+                        if (player > 0){
+                          char player_string[2];
+                          snprintf(player_string, 2, "%d", player - 1);
+                          strcat(client_msg, " ");
+                          strcat(client_msg, player_string);
+                        }
+                        strcat(client_msg, "\n");
+
+                        //sending
+                        if (send(socket_file_descriptor, client_msg, strlen(client_msg), 0) < 0) {
+                            printf("send failed\n");
+                        }
+                        else {
+                            printf("C: %s", client_msg);
+                        }
+                      }
+                      else {
+                        perror("sscanf");
+                        fprintf(stderr, "Wrong gametype, connect to a Bashni game\n");
+                        exit(EXIT_FAILURE);
+                      }
+
+                      memset(stringMatch, 0, 12);
+                      memset(client_msg, 0, 1024);
                     }
 
                     else {
