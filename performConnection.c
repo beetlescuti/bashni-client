@@ -8,21 +8,15 @@
 
 #include "performConnection.h"
 
-// TODO: wrap receive message (with newline as end) into function
-// TODO: continue with implementation of protocol
-// TODO: Whenever I run it with PLAYER = 2 it says, that there is no free player ... there seems to be an off by one error; if I run it with Player =1 I always get assigned Player 2
+// TODO: wrap send client_msg into separate function for readability
 
 char server_msg[1024];
 char client_msg[1024];
 int result;
 int packets;
 int bytes_received;
-char* dividedServerMsg[100];
-
-
-
-
-
+char** dividedServerMsg;
+char* tokenArray[100];
 
 void receiveServerMsg(int socket_file_descriptor) {
     /* reset old server_msg */
@@ -60,23 +54,26 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
         /* Check first byte of server_msg to see if Server is responding with a "+ ....." or an Error message */
         switch (server_msg[0]) {
             case '+':
-                // Divide ServerMsg into tokens so they can be adressed separately
-                *dividedServerMsg = divideServerMsg(server_msg);
+                // Divide ServerMsg into tokens so they can be parsed separately
+                dividedServerMsg = divideServerMsg(server_msg, tokenArray);
+
+                //The variables below are used to store sscanf matches
+                char stringMatch[100];
+                int intMatch = -1;
+                char position[3];
+                char piece;
 
                 //Look at each of the tokens separately
                 for (int i = 0; i < 100; i++) {
                   char *current = dividedServerMsg[i];
 
-                  //This variable is used for sscanf so it can check if the token can be matched to the format string
-                  char stringMatch[12];
-
                   if (dividedServerMsg[i] != NULL) {
-
                     printf("S: %s\n", dividedServerMsg[i]);
 
-                    //All the possible Server Messages and their corresponding actions by the client
+                    //All the possible Server Messages and their corresponding actions by the client follow
 
                     if (sscanf(current, "+ MNM Gameserver %*s accepting %s", stringMatch) == 1 ) {
+
                       /* send: client version, major version must match!! */
                       strcpy(client_msg, "VERSION 2.3\n");
                       if (send(socket_file_descriptor, client_msg, strlen(client_msg), 0) < 0) {
@@ -85,7 +82,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
                       else {
                            printf("C: %s", client_msg);
                       }
-                      memset(stringMatch, 0, 12);
+                      memset(stringMatch, 0, 100);
                       memset(client_msg, 0, 1024);
                     }
 
@@ -100,13 +97,17 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
                       else {
                            printf("C: %s", client_msg);
                       }
-                      memset(stringMatch, 0, 12);
+                      memset(stringMatch, 0, 100);
                       memset(client_msg, 0, 1024);
                     }
 
                     //Check if the game that we want to join is a Bashni game. If it is, send preferred player number
                     else if (sscanf(current, "+ PLAYING %s", stringMatch) == 1){
                       if (strcmp(stringMatch, "Bashni") == 0) {
+                        //Since game name could be anything, there's nothing to parse
+                        //so I'm just choosing to print the next server token and incrementing i to skip it in the next for-loop cyle
+                        printf("S: %s\n", dividedServerMsg[i+1]);
+                        i++;
                         //preparing client_msg
                         strcpy(client_msg, "PLAYER");
                         if (player > 0){
@@ -130,9 +131,59 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
                         fprintf(stderr, "Wrong gametype, connect to a Bashni game\n");
                         exit(EXIT_FAILURE);
                       }
-
-                      memset(stringMatch, 0, 12);
+                      memset(stringMatch, 0, 100);
                       memset(client_msg, 0, 1024);
+                    }
+
+                    else if (sscanf(current, "+ YOU %d %s", &player, stringMatch) == 2) {
+                      memset(stringMatch, 0, 100);
+                    }
+
+                    else if (sscanf(current, "+ TOTAL %d", &intMatch) == 1){
+                      //We know how many players there are but can't really parse player number or player name,
+                      // so just print them and skip to after the players are listed
+                      for (size_t j = 1; j < intMatch; j++) {
+
+                        printf("S: %s\n", dividedServerMsg[i+j]);
+                      }
+                      i = i + intMatch - 1;
+                      intMatch = -1;
+                    }
+
+                    else if (sscanf(current, "+ ENDPLA%s", stringMatch) == 1){
+                      memset(stringMatch, 0, 100);
+                    }
+
+                    else if (sscanf(current, "+ MOVE %d", &intMatch) == 1){
+                      intMatch = -1;
+                    }
+
+                    else if (sscanf(current, "+ PIECESLIST %d", &intMatch) == 1){
+                      // TODO: Maybe parse all the pieces in here, instead of in the next else-if statement,
+                      // since we know how many pieces are following?
+                      intMatch = -1;
+                    }
+
+                    else if (sscanf(current, "+ %c@%s", &piece, position) == 2){
+                      memset(position, 0, 3);
+                      piece = '0';
+                    }
+
+                    else if (sscanf(current, "+ ENDPIECES%s", stringMatch) == 1){
+                      strcpy(client_msg, "THINKING\n");
+                      //sending
+                      if (send(socket_file_descriptor, client_msg, strlen(client_msg), 0) < 0) {
+                          printf("send failed\n");
+                      }
+                      else {
+                          printf("C: %s", client_msg);
+                      }
+                      memset(stringMatch, 0, 100);
+                      memset(client_msg, 0, 1024);
+                    }
+
+                    else if (sscanf(current, "+ OKTHIN%s", stringMatch) == 1){
+                      memset(stringMatch, 0, 100);
                     }
 
                     else {
@@ -154,9 +205,10 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
     }
 }
 
-char* divideServerMsg(char *server_msg){
+// divides Server Message into an array of strings, so they can be parsed separately
+char** divideServerMsg(char *server_msg, char **tokenArray){
+  memset(tokenArray, 0, 1024);
   char *saveptr;
-  char *tokenArray[1024];
 
   int num_tokens = 0;
   char *token;
@@ -168,174 +220,5 @@ char* divideServerMsg(char *server_msg){
     current = NULL;
   }
 
-  return *tokenArray;
+  return tokenArray;
 };
-
-// int serverConnect(int socket_file_descriptor, char game_id[], int player) {
-
-//     char server_msg[1024];
-//     int result = 0;
-//     int packets = 0;
-//     int bytes_received= 0;
-//     memset(server_msg, 0, 1024);
-
-//     /* receive: is server accepting connections? */
-//     do {
-//         result =recv(socket_file_descriptor, &server_msg[bytes_received], 1024-bytes_received, 0);
-//         packets++;
-//         if (result > 0 ) {
-//             bytes_received+=result;
-//         }
-//         else {
-//             printf("Error: %i \n", result);
-//         }
-//         if (bytes_received >= 1024) {
-//             printf("Buffer overflow");
-//         break;
-//         }
-//     } while(server_msg[bytes_received-1] != '\n');
-
-//     // for debugging only
-//     // printf(  "S: %s bytes: %i packets: %i \n" , server_msg, bytes_received, packets);
-//     printf("S: %s" , server_msg);
-
-//     /* send: client version, major version must match!! */
-//     char client_version[14] = "VERSION 2.3\n";
-//     if (send(socket_file_descriptor, client_version, strlen(client_version), 0) < 0) {
-//         printf("send failed\n");
-//     }
-//     else {
-//         printf("C: %s", client_version);
-//     }
-
-//     /* empty previous server message */
-//     result = 0;
-//     packets = 0;
-//     bytes_received= 0;
-//     memset(server_msg, 0, 1024);
-
-//     /* receive: is client version accepted? */
-//     do {
-//         result =recv(socket_file_descriptor, &server_msg[bytes_received], 1024-bytes_received, 0);
-//         packets++;
-//         if (result > 0 ) {
-//             bytes_received+=result;
-//         }
-//         else {
-//             printf("Error: %i \n", result);
-//         }
-//         if (bytes_received >= 1024) {
-//             printf("Buffer overflow");
-//             break;
-//         }
-//     } while(server_msg[bytes_received-1] != '\n');
-
-//     // for debugging only
-//     // printf(  "S: %s bytes: %i packets: %i \n" , server_msg, bytes_received, packets);
-//     printf("S: %s" , server_msg);
-
-
-//     /* empty previous server message */
-//     result = 0;
-//     packets = 0;
-//     bytes_received= 0;
-//     memset(server_msg, 0, 1024);
-
-//     //preparing game_id_msg
-//     char game_id_msg[18];
-//     strcpy(game_id_msg, "ID ");
-//     strcat(game_id_msg, game_id);
-//     strcat(game_id_msg, "\n");
-
-
-//     // sending game_id
-//     if (send(socket_file_descriptor, game_id_msg, strlen(game_id_msg), 0) < 0) {
-//         printf("send failed\n");
-//     }
-//     else {
-//         printf("C: %s", game_id_msg);
-//     }
-
-//     //receive: is game-id accepted?
-//     do {
-//         result =recv(socket_file_descriptor, &server_msg[bytes_received], 1024-bytes_received, 0);
-//         packets++;
-//         if (result > 0 ) {
-//             bytes_received+=result;
-//         }
-//         else {
-//             printf("Error: %i \n", result);
-//         }
-//         if (bytes_received >= 1024) {
-//             printf("Buffer overflow");
-//             break;
-//         }
-//     } while(server_msg[bytes_received-1] != '\n');
-
-//     //print server_msg by separating new statements
-//     printf("S: ");
-//     for (size_t i = 0; i < strlen(server_msg); i++) {
-//       if (server_msg[i] == '+' && i != 0) {
-//         printf("S: %c", server_msg[i]);
-//       }
-//       else {
-//         printf("%c", server_msg[i]);
-//       }
-//     }
-
-//     //preparing player_msg
-//     char player_msg[10] = "PLAYER";
-//     if (player > 0){
-//       char player_string[2];
-//       snprintf(player_string, 2, "%d", player - 1);
-//       strcat(player_msg, " ");
-//       strcat(player_msg, player_string);
-//     }
-//     strcat(player_msg, "\n");
-
-//     printf("%s", player_msg);
-
-//     //sending player_msg
-
-//     if (send(socket_file_descriptor, player_msg, strlen(player_msg), 0) < 0) {
-//         printf("send failed\n");
-//     }
-//     else {
-//         printf("C: %s", player_msg);
-//     }
-
-//     /* empty previous server message */
-//     result = 0;
-//     packets = 0;
-//     bytes_received= 0;
-//     memset(server_msg, 0, 1024);
-
-//     //receive: is player accepted?
-//     do {
-//         result =recv(socket_file_descriptor, &server_msg[bytes_received], 1024-bytes_received, 0);
-//         packets++;
-//         if (result > 0 ) {
-//             bytes_received+=result;
-//         }
-//         else {
-//             printf("Error: %i \n", result);
-//         }
-//         if (bytes_received >= 1024) {
-//             printf("Buffer overflow");
-//             break;
-//         }
-//     } while(server_msg[bytes_received-1] != '\n');
-
-//     //print server_msg by separating new statements
-//     printf("S: ");
-//     for (size_t i = 0; i < strlen(server_msg); i++) {
-//       if (server_msg[i] == '+' && i != 0) {
-//         printf("S: %c", server_msg[i]);
-//       }
-//       else {
-//         printf("%c", server_msg[i]);
-//       }
-//     }
-
-//     return 0;
-// }
