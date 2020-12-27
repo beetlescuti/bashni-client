@@ -15,4 +15,4 @@ clean:
 	rm -f *.o $(TARGETS)
 
 play:
-	./sysprakclient -g $(GAME_ID) -p $(PLAYER)
+	./sysprakclient -g $(GAME_ID) -p $(PLAYER) -c $(CONF_FILE)

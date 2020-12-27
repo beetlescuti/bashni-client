@@ -8,6 +8,8 @@
 
 #include "performConnection.h"
 
+// TODO: implement wait sequence
+
 char server_msg[1024];
 char client_msg[1024];
 int result;

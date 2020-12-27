@@ -4,15 +4,13 @@
 
 #include "config.h"
 
-// TODO: do we want GAME_ID and PLAYER to move to the .conf file??
-
 /* reads in a .conf file and populates the configuration
    struct for use in other places */
-configuration read_conf_file() {
+configuration read_conf_file(char filename[]) {
 
     /* read in a config file */
     // TODO add if/else for command line parameter
-    FILE * config_file = fopen("client.conf", "r");
+    FILE * config_file = fopen(filename, "r");
 
     /* initialize a configuration structure */
     configuration game_config;

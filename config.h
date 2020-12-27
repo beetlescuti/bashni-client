@@ -7,6 +7,6 @@ typedef struct {
     char hostname[128]; 
 } configuration;
 
-configuration read_conf_file();
+configuration read_conf_file(char filename[]);
 
 #endif

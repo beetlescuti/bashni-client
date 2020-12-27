@@ -20,11 +20,6 @@
 #include "performConnection.h"
 #include "config.h"
 
-// #define GAMEKINDNAME "Baschni"
-// #define PORTNUMBER "1357"
-// #define HOSTNAME "sysprak.priv.lab.nm.ifi.lmu.de"
-
-
 // TODO: Errormessage when no command line arguments are passed
 // TODO: General Error handling
 
@@ -32,27 +27,35 @@ int main(int argc, char*argv[]) {
 
     /* Initialize user parameters */
     char game_id[14] = {0};
-    int player;
-    player = -1;
+    int player = -1;
+    
+    /* Configuration with default to client.conf,
+       but will be overriden if put in command line */
+    char conf_file[128] = "client.conf";
+
+    // TODO: do we want GAME_ID and PLAYER to move to the .conf file??
 
     /* Read Parameters from Commandline */
     int ret;
     while ((ret=getopt(argc, argv, "g:p:c:")) != -1) {
       switch (ret) {
         case 'g':
-           strncpy(game_id, optarg, 13);
-           break;
+            strncpy(game_id, optarg, 13);
+            break;
         case 'p':
-           player = atoi(optarg);
-           break;
+            player = atoi(optarg);
+            break;
+        case 'c':
+            memset(conf_file, 0, 128);
+            strncpy(conf_file, optarg, strlen(optarg) + 1);
+            break;
         default:
-           printf("you forgot the variables...\n");
-           break;
+            break;
       }
     }
 
     /* Get configuration details */
-    configuration game_conf = read_conf_file();
+    configuration game_conf = read_conf_file(conf_file);
 
     /* Connect to Game Server */
     int socket_file_descriptor;
