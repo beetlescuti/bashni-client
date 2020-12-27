@@ -1,9 +1,9 @@
 CC = gcc
 CFLAGS = -Wall -g -std=gnu11
 LDFLAGS = -lm -lpthread
-TARGETS = sysprak-client
-SRCFILES = sysprak-client.c performConnection.c
-OBJECTS = sysprak-client.o performConnection.o
+TARGETS = sysprakclient
+SRCFILES = sysprakclient.c performConnection.c config.c
+OBJECTS = sysprakclient.o performConnection.o config.o
 
 all: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TARGETS) $(OBJECTS)
@@ -15,4 +15,4 @@ clean:
 	rm -f *.o $(TARGETS)
 
 play:
-	./sysprak-client -g $(GAME_ID) -p $(PLAYER)
+	./sysprakclient -g $(GAME_ID) -p $(PLAYER)
