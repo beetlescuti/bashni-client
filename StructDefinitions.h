@@ -12,14 +12,14 @@ typedef struct game_info {
     pid_t thinker_id;
     pid_t connector_id;
     char player_name[];  // Frage: am Ende geht es, aber sonst nicht?
-} game_info;
+} GAME_INFO;
 
 typedef struct player{
-    int player id;
+    int player_id;
     bool ready;
     char player_name[];
 
-} player;
+} PLAYER;
 
 
 #endif //BASCHNI_CLIENT_STRUCTDEFINITIONS_H

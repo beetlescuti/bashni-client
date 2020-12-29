@@ -16,6 +16,9 @@
 #include<stdbool.h>
 #include<netdb.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 #include "performConnection.h"
 #include "StructDefinitions.h"
@@ -56,9 +59,26 @@ int main(int argc, char*argv[]) {
     int socket_file_descriptor;
     socket_file_descriptor = getSocketInfo(argc, argv);
 
+    /* Create Shared Memory for GameInfo for now*/
+    int shm_id = shmget(IPC_PRIVATE, sizeof(GAME_INFO), IPC_CREAT | 0666); // not sure what these flags mean IPC_CREAT | 0666
+    GAME_INFO* ptrtosharedmemory;
+    if (shm_id>= 0) {
+        ptrtosharedmemory = shmat(shm_id, 0, IPC_CREAT | 0666);
+        if (ptrtosharedmemory==(GAME_INFO *)-1) {
+            perror("shmat");
+        } else { /* TODO: wie bekommen wir jetzt das struct in unser shared memory?*/
+            /* Write GAME_INFO to ptr */
+             //   ptrtosharedmemory[0] = GAME_INFO info_for_this_game {0,0,0, "name"};
+            printf("shared memory successfully acquired but will now be deleted...\n");
+            shmctl(shm_id, IPC_RMID, NULL);;
+        }
+    } else { /* shmget lief schief */
+        perror("shmget");
+    }
 
 
-    /* divide into connector and thinker */
+
+/* divide into connector and thinker */
     pid_t pid = fork();
 
     if(pid == 0) {
@@ -135,3 +155,5 @@ int getSocketInfo(int argc, char*argv[]) {
 
     return socket_file_descriptor;
 }
+
+
