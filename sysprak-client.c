@@ -15,8 +15,10 @@
 #include<string.h>
 #include<stdbool.h>
 #include<netdb.h>
+#include <sys/wait.h>
 
 #include "performConnection.h"
+#include "StructDefinitions.h"
 
 #define GAMEKINDNAME "Baschni"
 #define PORTNUMBER "1357"
@@ -54,8 +56,27 @@ int main(int argc, char*argv[]) {
     int socket_file_descriptor;
     socket_file_descriptor = getSocketInfo(argc, argv);
 
-    /* Enter Prolog Phase */
-    serverConnect(socket_file_descriptor, game_id, player);
+
+
+    /* divide into connector and thinker */
+    pid_t pid = fork();
+
+    if(pid == 0) {
+        printf("Child process => PPID=%d, PID=%d\n", getppid(), getpid()); // I am the connector
+        /* Enter Prolog Phase */
+
+        serverConnect(socket_file_descriptor, game_id, player);
+        exit(0);
+    }
+    else  {
+        printf("Parent process => PID=%d\n", getpid()); // I am the thinker, I do not have a job yet.
+        printf("Waiting for child processes to finish...\n");
+        wait(NULL);
+        printf("child process finished.\n");
+    }
+
+
+
 
     exit(EXIT_SUCCESS);
 }
