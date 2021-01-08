@@ -175,32 +175,32 @@ void receiveServerMsg(int socket_file_descriptor) {
 
 // divides Server Message into an array of strings, so they can be parsed separately
 char** divideServerMsg(char *server_msg, char **tokenArray){
-  memset(tokenArray, 0, MSGLEN);
-  char *saveptr;
+    memset(tokenArray, 0, MSGLEN);
+    char *saveptr;
 
-  int num_tokens = 0;
-  char *token;
-  char *current = server_msg;
+    int num_tokens = 0;
+    char *token;
+    char *current = server_msg;
 
-  while((token = strtok_r(current, "\n", &saveptr)) != NULL){
-    tokenArray[num_tokens] = token;
-    num_tokens++;
-    current = NULL;
-  }
+    while((token = strtok_r(current, "\n", &saveptr)) != NULL){
+        tokenArray[num_tokens] = token;
+        num_tokens++;
+        current = NULL;
+    }
 
-  return tokenArray;
+    return tokenArray;
 };
 
 // sends a client message to the server
 void sendClientMsg(int socket_file_descriptor) {
-  if (send(socket_file_descriptor, client_msg, strlen(client_msg), 0) < 0) {
-         printf("Send Client message failed\n");
-  }
-  else {
-         printf("C: %s", client_msg);
-  }
+    if (send(socket_file_descriptor, client_msg, strlen(client_msg), 0) < 0) {
+        printf("Send Client message failed\n");
+    }
+    else {
+        printf("C: %s", client_msg);
+    }
 
-  // clear the variables for use in the next send
-  memset(stringMatch, 0, MATCHLEN);
-  memset(client_msg, 0, MSGLEN);
+    // clear the variables for use in the next send
+    memset(stringMatch, 0, MATCHLEN);
+    memset(client_msg, 0, MSGLEN);
 }
