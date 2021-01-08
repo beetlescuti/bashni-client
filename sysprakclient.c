@@ -15,6 +15,7 @@
 #include<string.h>
 #include<stdbool.h>
 #include<netdb.h>
+#include<sys/wait.h>
 
 #include "sysprakclient.h"
 #include "performConnection.h"
@@ -65,15 +66,22 @@ int main(int argc, char*argv[]) {
     /* Create Shared Memory */
 
     /* Divide into Connector and Thinker */
-    // pid_t pid = fork();
+    pid_t pid = fork();
 
-    // if (pid == 0) {
-    //     print
-    // }
+    /* Connecter (Child Process) */
+    if (pid == 0) {
+        printf("Child process ->  PPID: %d, PID: %d\n", getppid(), getpid());
 
-
-    /* Enter Prolog Phase */
-    serverConnect(socket_file_descriptor, game_id, player);
+        /* Enter Prolog Phase */
+        serverConnect(socket_file_descriptor, game_id, player);
+    }
+    /* Thinker (Parent Process) */
+    else {
+        printf("Parent process -> PID: %d\n", getpid());
+        printf("Waiting for child processes to finish...\n");
+        wait(NULL);
+        printf("Child process finished.\n");
+    }
 
     exit(EXIT_SUCCESS);
 }

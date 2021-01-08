@@ -1,0 +1,67 @@
+==54537== Memcheck, a memory error detector
+==54537== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==54537== Using Valgrind-3.17.0.GIT-lbmacos-adaae87a41-20201121 and LibVEX; rerun with -h for copyright info
+==54537== Command: ./sysprakclient
+==54537== Parent PID: 31631
+==54537== 
+--54537-- 
+--54537-- Valgrind options:
+--54537--    --leak-check=full
+--54537--    --show-leak-kinds=all
+--54537--    --track-origins=yes
+--54537--    --verbose
+--54537--    --log-file=valgrind-out.txt
+--54537-- Output from sysctl({CTL_KERN,KERN_VERSION}):
+--54537--   Darwin Kernel Version 20.2.0: Wed Dec  2 20:39:59 PST 2020; root:xnu-7195.60.75~1/RELEASE_X86_64
+--54537-- Arch and hwcaps: AMD64, LittleEndian, amd64-cx16-lzcnt-rdtscp-sse3-ssse3-avx-avx2-bmi-f16c-rdrand
+--54537-- Page sizes: currently 4096, max supported 4096
+--54537-- Valgrind library directory: /usr/local/Cellar/valgrind/HEAD-adaae87/lib/valgrind
+--54537-- ./sysprakclient (rx at 0x100000000, rw at 0x100004000)
+--54537--    reading syms   from primary file (19 52)
+--54537-- run: /usr/bin/dsymutil "./sysprakclient"
+--54537--    dsyms= ./sysprakclient.dSYM/Contents/Resources/DWARF/sysprakclient
+--54537--    reading dwarf3 from dsyms file
+--54537-- /usr/lib/dyld (rx at 0x100010000, rw at 0x1000ac000)
+--54537--    reading syms   from primary file (5 2886)
+--54537-- Scheduler: using generic scheduler lock implementation.
+--54537-- Reading suppressions file: /usr/local/Cellar/valgrind/HEAD-adaae87/lib/valgrind/default.supp
+==54537== embedded gdbserver: reading from /var/folders/0b/ln74yp_552v1xpvt959ttdqh0000gn/T//vgdb-pipe-from-vgdb-to-54537-by-sorenlittle-on-???
+==54537== embedded gdbserver: writing to   /var/folders/0b/ln74yp_552v1xpvt959ttdqh0000gn/T//vgdb-pipe-to-vgdb-from-54537-by-sorenlittle-on-???
+==54537== embedded gdbserver: shared mem   /var/folders/0b/ln74yp_552v1xpvt959ttdqh0000gn/T//vgdb-pipe-shared-mem-vgdb-54537-by-sorenlittle-on-???
+==54537== 
+==54537== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==54537== don't want to do, unless you know exactly what you're doing,
+==54537== or are doing some strange experiment):
+==54537==   /usr/local/Cellar/valgrind/HEAD-adaae87/lib/valgrind/../../bin/vgdb --pid=54537 ...command...
+==54537== 
+==54537== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==54537==   /path/to/gdb ./sysprakclient
+==54537== and then give GDB the following command
+==54537==   target remote | /usr/local/Cellar/valgrind/HEAD-adaae87/lib/valgrind/../../bin/vgdb --pid=54537
+==54537== --pid is optional if only one valgrind process is running
+==54537== 
+--54537-- REDIR: 0x100067e00 (dyld:strcmp) redirected to 0x2580587bb (???)
+--54537-- REDIR: 0x100061df4 (dyld:arc4random) redirected to 0x258058859 (???)
+--54537-- REDIR: 0x1000671e0 (dyld:strlen) redirected to 0x25805878a (???)
+--54537-- REDIR: 0x100068100 (dyld:strcpy) redirected to 0x2580587d7 (???)
+--54537-- REDIR: 0x100065289 (dyld:strcat) redirected to 0x25805879b (???)
+--54537-- REDIR: 0x100066fd2 (dyld:strlcat) redirected to 0x2580587f4 (???)
+==54537== Warning: set address range perms: large range [0x7fff20023000, 0x80001fe23000) (defined)
+==54537== Warning: set address range perms: large range [0x7fff2466f000, 0x7fff7ffa3000) (defined)
+==54537== Warning: set address range perms: large range [0x7fff8dfc7000, 0x7fffc0023000) (noaccess)
+==54537== Warning: set address range perms: large range [0x7fffc0023000, 0x7fffe22c3000) (defined)
+==54537== Warning: set address range perms: large range [0x7fffe22c3000, 0x7fffffe00000) (noaccess)
+--54537-- /usr/local/Cellar/valgrind/HEAD-adaae87/lib/valgrind/vgpreload_core-amd64-darwin.so (rx at 0x100128000, rw at 0x10012c000)
+--54537--    reading syms   from primary file (3 53)
+--54537--    dSYM= /usr/local/Cellar/valgrind/HEAD-adaae87/lib/valgrind/vgpreload_core-amd64-darwin.so.dSYM/Contents/Resources/DWARF/vgpreload_core-amd64-darwin.so
+--54537-- /usr/local/Cellar/valgrind/HEAD-adaae87/lib/valgrind/vgpreload_memcheck-amd64-darwin.so (rx at 0x100134000, rw at 0x10013c000)
+--54537--    reading syms   from primary file (75 62)
+--54537--    dSYM= /usr/local/Cellar/valgrind/HEAD-adaae87/lib/valgrind/vgpreload_memcheck-amd64-darwin.so.dSYM/Contents/Resources/DWARF/vgpreload_memcheck-amd64-darwin.so
+==54537== 
+==54537== HEAP SUMMARY:
+==54537==     in use at exit: 0 bytes in 0 blocks
+==54537==   total heap usage: 0 allocs, 0 frees, 0 bytes allocated
+==54537== 
+==54537== All heap blocks were freed -- no leaks are possible
+==54537== 
+==54537== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
