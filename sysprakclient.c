@@ -64,6 +64,10 @@ int main(int argc, char*argv[]) {
     /* Create Shared Memory */
     int shmid = create_shared_memory();
 
+    /* Create a pointer to a game_info struct from the shared mem */
+    game_info * shm_info;
+    shm_info = (game_info*) shmat(shmid, NULL, 0);
+
     /* Divide into Connector and Thinker */
     pid_t pid = fork();
 
@@ -76,10 +80,6 @@ int main(int argc, char*argv[]) {
 
         printf("====> child sees game name: %s\n", our_info.game_name);
 
-        /* Create a pointer to a game_info struct from the shared mem */
-        game_info * shm_info;
-        shm_info = (game_info*) shmat(shmid, NULL, 0);
-
         /* Save our struct info from the prolog phase to that pointer */
         *shm_info = our_info;
 
@@ -91,11 +91,14 @@ int main(int argc, char*argv[]) {
         wait(NULL);
         printf("Child process finished.\n");
 
-        game_info * parent_game_info;
-        parent_game_info = (game_info*) shmat(shmid, NULL, 0);
+        // game_info * parent_game_info;
+        // parent_game_info = (game_info*) shmat(shmid, NULL, 0);
 
-        printf("====> parent sees game name: %s\n", parent_game_info->game_name);
+        printf("====> parent sees game name: %s\n", shm_info->game_name);
     }
+
+    /* clear the shared memory segment */
+    shmctl(shmid, IPC_RMID, NULL);
 
     exit(EXIT_SUCCESS);
 }
