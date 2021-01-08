@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 
 #include "performConnection.h"
+#include "sharedMemory.h"
 
 // TODO: implement wait sequence
 
@@ -28,7 +29,10 @@ int intMatch = -1;
 char position[3];
 char piece;
 
-int serverConnect(int socket_file_descriptor, char game_id[], int player) {
+// TESTING CODE
+game_info our_info;
+
+game_info serverConnect(int socket_file_descriptor, char game_id[], int player) {
 
     /* Enter an infinite while loop that calls receiveServerMsg() and then filters the
        result into the correct switch/case */
@@ -126,6 +130,20 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
 
                         else if (sscanf(current, "+ OKTHIN%s", stringMatch) == 1){
                             memset(stringMatch, 0, MATCHLEN);
+
+                            // TESTING CODE
+                            
+                            // TODO: make these non-arbitrary
+                            snprintf(our_info.game_name, NAMELEN, "test_game");
+                            our_info.num_players = 2;
+                            our_info.our_player = 0;
+                            our_info.connector_id = 55190;
+                            our_info.thinker_id = 55187;
+
+                            return our_info;
+
+                            exit(EXIT_SUCCESS);
+
                         }
 
                         else {
@@ -134,7 +152,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
                             exit(EXIT_FAILURE);
                         }
                     }
-                }
+                }                
                 break;
             case '-':
                 // For debugging
@@ -145,6 +163,26 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
                 break;
         }
     }
+
+    // return our_info;
+
+    // /* =================================== */
+    // printf("out of while loop\n");
+    
+
+    // // TODO: make these non-arbitrary
+    // strcpy(our_info.game_name, "test_game");
+    // our_info.num_players = 2;
+    // our_info.our_player = 0;
+    // our_info.connector_id = 55190;
+    // our_info.thinker_id = 55187;
+
+    // printf("======= the child writes\n");
+    // printf("%s, %d, %d, %d, %d\n", our_info.game_name,our_info.num_players,our_info.our_player,our_info.connector_id,our_info.thinker_id);
+
+    // return our_info;
+
+    
 }
 
 // receives Server Messages and ensures message is complete

@@ -4,8 +4,7 @@
 
 #include "config.h"
 
-/* reads in a .conf file and populates the configuration
-   struct for use in other places */
+/* reads in a .conf file and populates the configuration struct for use in other places */
 configuration read_conf_file(char filename[]) {
 
     /* read in a config file */

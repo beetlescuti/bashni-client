@@ -1,10 +1,3 @@
-//
-//  sysprakclient.c
-//
-//
-//  Created by Soren Little on 12/9/20.
-//
-
 #include<sys/types.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
@@ -16,10 +9,15 @@
 #include<stdbool.h>
 #include<netdb.h>
 #include<sys/wait.h>
+#include<sys/shm.h>
 
-#include "sysprakclient.h"
-#include "performConnection.h"
 #include "config.h"
+#include "performConnection.h"
+#include "sharedMemory.h"
+#include "sysprakclient.h"
+
+#define GAMEIDLEN 14
+#define CONFFILENAMELEN 128
 
 // TODO: Errormessage when no command line arguments are passed
 // TODO: General Error handling
@@ -27,13 +25,13 @@
 int main(int argc, char*argv[]) {
 
     /* Initialize user parameters */
-    char game_id[14] = {0};
+    char game_id[GAMEIDLEN] = {0};
     int player = -1;
     
     /* Configuration with default to client.conf,
        but will be overriden if put in command line 
        using the flag -c */
-    char conf_file[128] = "client.conf";
+    char conf_file[CONFFILENAMELEN] = "client.conf";
 
     // TODO: do we want GAME_ID and PLAYER to move to the .conf file??
 
@@ -64,6 +62,7 @@ int main(int argc, char*argv[]) {
     socket_file_descriptor = getSocketInfo(argc, argv, game_conf.hostname, game_conf.portnumber);
 
     /* Create Shared Memory */
+    int shmid = create_shared_memory();
 
     /* Divide into Connector and Thinker */
     pid_t pid = fork();
@@ -73,7 +72,15 @@ int main(int argc, char*argv[]) {
         printf("Child process ->  PPID: %d, PID: %d\n", getppid(), getpid());
 
         /* Enter Prolog Phase */
-        serverConnect(socket_file_descriptor, game_id, player);
+        game_info our_info = serverConnect(socket_file_descriptor, game_id, player);
+
+        printf("====> child sees game name: %s\n", our_info.game_name);
+
+        game_info * shm_info;
+        shm_info = (game_info*) shmat(shmid, NULL, 0);
+
+        *shm_info = our_info;
+
     }
     /* Thinker (Parent Process) */
     else {
@@ -81,6 +88,11 @@ int main(int argc, char*argv[]) {
         printf("Waiting for child processes to finish...\n");
         wait(NULL);
         printf("Child process finished.\n");
+
+        game_info * parent_game_info;
+        parent_game_info = (game_info*) shmat(shmid, NULL, 0);
+
+        printf("====> parent sees game name: %s\n", parent_game_info->game_name);
     }
 
     exit(EXIT_SUCCESS);

@@ -1,10 +1,12 @@
+#define CONFIGLEN 128
+
 #ifndef config
 #define config
 
 typedef struct {
-    char game[128];
-    char portnumber[128];
-    char hostname[128]; 
+    char game[CONFIGLEN];
+    char portnumber[CONFIGLEN];
+    char hostname[CONFIGLEN]; 
 } configuration;
 
 configuration read_conf_file(char filename[]);

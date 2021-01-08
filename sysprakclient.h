@@ -1,10 +1,3 @@
-//
-//  sysprak-client.h
-//  
-//
-//  Created by Soren Little on 12/9/20.
-//
-
 #ifndef sysprakclient
 #define sysprakclient
 
