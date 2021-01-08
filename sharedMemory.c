@@ -14,13 +14,3 @@ int create_shared_memory() {
     }
     return shmid;
 }
-
-// void struct_to_shared_memory(int shmid, game_info info) {
-//     game_info * shm;
-//     if ((shm = shmat(shmid, NULL, 0)) == (game_info*) -1) {
-//         perror("shmat");
-//     }
-
-//     &info = shm;
-
-// }

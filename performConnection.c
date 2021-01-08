@@ -29,7 +29,6 @@ int intMatch = -1;
 char position[3];
 char piece;
 
-// TESTING CODE
 game_info our_info;
 
 game_info serverConnect(int socket_file_descriptor, char game_id[], int player) {
@@ -131,8 +130,7 @@ game_info serverConnect(int socket_file_descriptor, char game_id[], int player) 
                         else if (sscanf(current, "+ OKTHIN%s", stringMatch) == 1){
                             memset(stringMatch, 0, MATCHLEN);
 
-                            // TESTING CODE
-                            
+                            /* ---------------------- arbitrary end-point for shmem testing ---------------------- */
                             // TODO: make these non-arbitrary
                             snprintf(our_info.game_name, NAMELEN, "test_game");
                             our_info.num_players = 2;
@@ -163,26 +161,6 @@ game_info serverConnect(int socket_file_descriptor, char game_id[], int player) 
                 break;
         }
     }
-
-    // return our_info;
-
-    // /* =================================== */
-    // printf("out of while loop\n");
-    
-
-    // // TODO: make these non-arbitrary
-    // strcpy(our_info.game_name, "test_game");
-    // our_info.num_players = 2;
-    // our_info.our_player = 0;
-    // our_info.connector_id = 55190;
-    // our_info.thinker_id = 55187;
-
-    // printf("======= the child writes\n");
-    // printf("%s, %d, %d, %d, %d\n", our_info.game_name,our_info.num_players,our_info.our_player,our_info.connector_id,our_info.thinker_id);
-
-    // return our_info;
-
-    
 }
 
 // receives Server Messages and ensures message is complete

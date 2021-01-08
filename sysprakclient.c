@@ -76,9 +76,11 @@ int main(int argc, char*argv[]) {
 
         printf("====> child sees game name: %s\n", our_info.game_name);
 
+        /* Create a pointer to a game_info struct from the shared mem */
         game_info * shm_info;
         shm_info = (game_info*) shmat(shmid, NULL, 0);
 
+        /* Save our struct info from the prolog phase to that pointer */
         *shm_info = our_info;
 
     }
