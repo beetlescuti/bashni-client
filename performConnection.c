@@ -44,97 +44,96 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
 
                 // Look at each of the tokens separately
                 for (int i = 0; i < TOKENLEN; i++) {
-                  char *current = dividedServerMsg[i];
+                    char *current = dividedServerMsg[i];
 
-                  if (dividedServerMsg[i] != NULL) {
-                    printf("S: %s\n", current);
+                    if (dividedServerMsg[i] != NULL) {
+                        printf("S: %s\n", current);
 
-                    // All the possible Server Messages and their corresponding actions by the client follow
+                        // All the possible Server Messages and their corresponding actions by the client follow
                     
-                    if (sscanf(current, "+ MNM Gameserver %*s accepting %s", stringMatch) == 1) {
-                      // send: client version, major version must match!!
-                      snprintf(client_msg, MSGLEN, "VERSION 2.3\n");
-                      sendClientMsg(socket_file_descriptor);
-                    }
-
-                    else if (sscanf(current, "+ Client version accepted - please send %s to join", stringMatch) == 1){
-                      snprintf(client_msg, MSGLEN, "ID %s\n", game_id);
-                      sendClientMsg(socket_file_descriptor);
-                    }
-
-                    // Check if the game that we want to join is a Bashni game. If it is, send preferred player number
-                    else if (sscanf(current, "+ PLAYING %s", stringMatch) == 1){
-                      if (strcmp(stringMatch, "Bashni") == 0) {
-                        // Since game name could be anything, there's nothing to parse
-                        // so I'm just choosing to print the next server token and incrementing i to skip it in the next for-loop cyle
-                        printf("S: %s\n", dividedServerMsg[i+1]);
-                        i++;
-
-                        /* if a player has been specified in the config then send 
-                           it, otherwise simply send player */
-                        if (player > 0) {
-                          snprintf(client_msg, MSGLEN, "PLAYER %d\n", player-1);
+                        if (sscanf(current, "+ MNM Gameserver %*s accepting %s", stringMatch) == 1) {
+                            // send: client version, major version must match!!
+                            snprintf(client_msg, MSGLEN, "VERSION 2.3\n");
+                            sendClientMsg(socket_file_descriptor);
                         }
-                      
-                        // sending
-                        sendClientMsg(socket_file_descriptor);
-                      }
-                      else {
-                        perror("sscanf");
-                        fprintf(stderr, "Wrong gametype, connect to a Bashni game\n");
-                        exit(EXIT_FAILURE);
-                      }
-                    }
 
-                    else if (sscanf(current, "+ YOU %d %s", &player, stringMatch) == 2) {
-                      memset(stringMatch, 0, MATCHLEN);
-                    }
+                        else if (sscanf(current, "+ Client version accepted - please send %s to join", stringMatch) == 1){
+                            snprintf(client_msg, MSGLEN, "ID %s\n", game_id);
+                            sendClientMsg(socket_file_descriptor);
+                        }
 
-                    else if (sscanf(current, "+ TOTAL %d", &intMatch) == 1){
-                      // We know how many players there are but can't really parse player number or player name,
-                      // so just print them and skip to after the players are listed
-                      for (size_t j = 1; j < intMatch; j++) {
-                        printf("S: %s\n", dividedServerMsg[i+j]);
-                      }
-                      i = i + intMatch - 1;
-                      intMatch = -1;
-                    }
+                        // Check if the game that we want to join is a Bashni game. If it is, send preferred player number
+                        else if (sscanf(current, "+ PLAYING %s", stringMatch) == 1){
+                            if (strcmp(stringMatch, "Bashni") == 0) {
+                                // Since game name could be anything, there's nothing to parse
+                                // so I'm just choosing to print the next server token and incrementing i to skip it in the next for-loop cyle
+                                printf("S: %s\n", dividedServerMsg[i+1]);
+                                i++;
 
-                    else if (sscanf(current, "+ ENDPLA%s", stringMatch) == 1){
-                      memset(stringMatch, 0, MATCHLEN);
-                    }
+                                /* if a player has been specified in the config then send 
+                                it, otherwise simply send player */
+                                if (player > 0) {
+                                snprintf(client_msg, MSGLEN, "PLAYER %d\n", player-1);
+                            }
+                            // sending
+                            sendClientMsg(socket_file_descriptor);
+                            }
+                            else {
+                                perror("sscanf");
+                                fprintf(stderr, "Wrong gametype, connect to a Bashni game\n");
+                                exit(EXIT_FAILURE);
+                            }
+                        }
 
-                    else if (sscanf(current, "+ MOVE %d", &intMatch) == 1){
-                      intMatch = -1;
-                    }
+                        else if (sscanf(current, "+ YOU %d %s", &player, stringMatch) == 2) {
+                            memset(stringMatch, 0, MATCHLEN);
+                        }
 
-                    else if (sscanf(current, "+ PIECESLIST %d", &intMatch) == 1){
-                      // TODO: Maybe parse all the pieces in here, instead of in the next else-if statement,
-                      // since we know how many pieces are following?
-                      intMatch = -1;
-                    }
+                        else if (sscanf(current, "+ TOTAL %d", &intMatch) == 1){
+                            // We know how many players there are but can't really parse player number or player name,
+                            // so just print them and skip to after the players are listed
+                            for (size_t j = 1; j < intMatch; j++) {
+                                printf("S: %s\n", dividedServerMsg[i+j]);
+                            }
+                            i = i + intMatch - 1;
+                            intMatch = -1;
+                        }
 
-                    else if (sscanf(current, "+ %c@%s", &piece, position) == 2){
-                      memset(position, 0, 3);
-                      piece = '0';
-                    }
+                        else if (sscanf(current, "+ ENDPLA%s", stringMatch) == 1){
+                            memset(stringMatch, 0, MATCHLEN);
+                        }
 
-                    else if (sscanf(current, "+ ENDPIECES%s", stringMatch) == 1){
-                      snprintf(client_msg, MSGLEN, "THINKING\n");
-                      // sending
-                      sendClientMsg(socket_file_descriptor);
-                    }
+                        else if (sscanf(current, "+ MOVE %d", &intMatch) == 1){
+                            intMatch = -1;
+                        }
 
-                    else if (sscanf(current, "+ OKTHIN%s", stringMatch) == 1){
-                      memset(stringMatch, 0, MATCHLEN);
-                    }
+                        else if (sscanf(current, "+ PIECESLIST %d", &intMatch) == 1){
+                            // TODO: Maybe parse all the pieces in here, instead of in the next else-if statement,
+                            // since we know how many pieces are following?
+                            intMatch = -1;
+                        }
 
-                    else {
-                      perror("sscanf");
-                      fprintf(stderr, "could not parse\n");
-                      exit(EXIT_FAILURE);
+                        else if (sscanf(current, "+ %c@%s", &piece, position) == 2){
+                            memset(position, 0, 3);
+                            piece = '0';
+                        }
+
+                        else if (sscanf(current, "+ ENDPIECES%s", stringMatch) == 1){
+                            snprintf(client_msg, MSGLEN, "THINKING\n");
+                            // sending
+                            sendClientMsg(socket_file_descriptor);
+                        }
+
+                        else if (sscanf(current, "+ OKTHIN%s", stringMatch) == 1){
+                            memset(stringMatch, 0, MATCHLEN);
+                        }
+
+                        else {
+                            perror("sscanf");
+                            fprintf(stderr, "could not parse\n");
+                            exit(EXIT_FAILURE);
+                        }
                     }
-                  }
                 }
                 break;
             case '-':

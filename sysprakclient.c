@@ -30,7 +30,8 @@ int main(int argc, char*argv[]) {
     int player = -1;
     
     /* Configuration with default to client.conf,
-       but will be overriden if put in command line */
+       but will be overriden if put in command line 
+       using the flag -c */
     char conf_file[128] = "client.conf";
 
     // TODO: do we want GAME_ID and PLAYER to move to the .conf file??
@@ -60,6 +61,16 @@ int main(int argc, char*argv[]) {
     /* Connect to Game Server */
     int socket_file_descriptor;
     socket_file_descriptor = getSocketInfo(argc, argv, game_conf.hostname, game_conf.portnumber);
+
+    /* Create Shared Memory */
+
+    /* Divide into Connector and Thinker */
+    // pid_t pid = fork();
+
+    // if (pid == 0) {
+    //     print
+    // }
+
 
     /* Enter Prolog Phase */
     serverConnect(socket_file_descriptor, game_id, player);
