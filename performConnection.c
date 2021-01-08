@@ -50,19 +50,15 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
                     printf("S: %s\n", current);
 
                     // All the possible Server Messages and their corresponding actions by the client follow
-
-                    if (sscanf(current, "+ MNM Gameserver %*s accepting %s", stringMatch) == 1 ) {
+                    
+                    if (sscanf(current, "+ MNM Gameserver %*s accepting %s", stringMatch) == 1) {
                       // send: client version, major version must match!!
-                      strcpy(client_msg, "VERSION 2.3\n");
-                      
+                      snprintf(client_msg, MSGLEN, "VERSION 2.3\n");
                       sendClientMsg(socket_file_descriptor);
                     }
 
-                    else if (sscanf(current, "+ Client version accepted - please send %s to join", stringMatch) == 1 ){
-                      strcpy(client_msg, "ID ");
-                      strcat(client_msg, game_id);
-                      strcat(client_msg, "\n");
-
+                    else if (sscanf(current, "+ Client version accepted - please send %s to join", stringMatch) == 1){
+                      snprintf(client_msg, MSGLEN, "ID %s\n", game_id);
                       sendClientMsg(socket_file_descriptor);
                     }
 
@@ -73,16 +69,13 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
                         // so I'm just choosing to print the next server token and incrementing i to skip it in the next for-loop cyle
                         printf("S: %s\n", dividedServerMsg[i+1]);
                         i++;
-                        // preparing client_msg
-                        strcpy(client_msg, "PLAYER");
-                        if (player > 0){
-                          char player_string[2];
-                          snprintf(player_string, 2, "%d", player - 1);
-                          strcat(client_msg, " ");
-                          strcat(client_msg, player_string);
-                        }
-                        strcat(client_msg, "\n");
 
+                        /* if a player has been specified in the config then send 
+                           it, otherwise simply send player */
+                        if (player > 0) {
+                          snprintf(client_msg, MSGLEN, "PLAYER %d\n", player-1);
+                        }
+                      
                         // sending
                         sendClientMsg(socket_file_descriptor);
                       }
@@ -127,7 +120,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
                     }
 
                     else if (sscanf(current, "+ ENDPIECES%s", stringMatch) == 1){
-                      strcpy(client_msg, "THINKING\n");
+                      snprintf(client_msg, MSGLEN, "THINKING\n");
                       // sending
                       sendClientMsg(socket_file_descriptor);
                     }
