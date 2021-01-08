@@ -11,8 +11,8 @@
 // TODO: implement wait sequence
 
 #define MSGLEN 1024
-#define TOKENLEN 128
 #define MATCHLEN 1024
+#define TOKENLEN 128
 
 char server_msg[MSGLEN];
 char client_msg[MSGLEN];
@@ -183,14 +183,14 @@ void receiveServerMsg(int socket_file_descriptor) {
 
 // divides Server Message into an array of strings, so they can be parsed separately
 char** divideServerMsg(char *server_msg, char **tokenArray){
-  memset(tokenArray, 0, TOKENLEN);
+  memset(tokenArray, 0, MSGLEN);
   char *saveptr;
 
   int num_tokens = 0;
   char *token;
   char *current = server_msg;
 
-  while( (token = strtok_r(current, "\n", &saveptr)) != NULL){
+  while((token = strtok_r(current, "\n", &saveptr)) != NULL){
     tokenArray[num_tokens] = token;
     num_tokens++;
     current = NULL;
