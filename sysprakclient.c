@@ -83,6 +83,9 @@ int main(int argc, char*argv[]) {
         /* Save our struct info from the prolog phase to that pointer */
         *shm_info = our_info;
 
+
+        // test if the array is working
+
     }
     /* Thinker (Parent Process) */
     else {
