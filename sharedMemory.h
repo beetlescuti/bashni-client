@@ -11,6 +11,7 @@ typedef struct {
     int our_playernum;
     int total_players;
     int max_moves;
+    int total_pieces;
     pid_t thinker_id;
     pid_t connector_id;
 } game_info;

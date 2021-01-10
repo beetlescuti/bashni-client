@@ -33,19 +33,18 @@ int our_playernum;
 char our_playername[MATCHLEN];
 int server_totalplayers;
 int server_max_moves;
+int server_total_pieces;
 
 // Create necessary structs
 all_info game_and_players;
 
 
-char stringMatch[MATCHLEN];
-int intMatch = -1;
 char position[3];
 char piece;
 
 
 
-int serverConnect(int socket_file_descriptor, char game_id[], int player) {
+int serverConnect(int socket_file_descriptor, char game_id[], int player, int * shmid_ptr) {
 
     /* Enter the PID and PPID into the game_info struct */
     game_and_players.game_info.connector_id = getpid();
@@ -154,10 +153,8 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
                             game_and_players.game_info.max_moves = server_max_moves;
                         }
 
-                        else if (sscanf(current, "+ PIECESLIST %d", &intMatch) == 1){
-                            // TODO: Maybe parse all the pieces in here, instead of in the next else-if statement,
-                            // since we know how many pieces are following?
-                            intMatch = -1;
+                        else if (sscanf(current, "+ PIECESLIST %d", &server_total_pieces) == 1){
+                            game_and_players.game_info.total_pieces = server_total_pieces;
                         }
 
                         else if (sscanf(current, "+ %c@%s", &piece, position) == 2){
@@ -165,10 +162,11 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
                             piece = '0';
                         }
 
-                        else if (sscanf(current, "+ ENDPIECES%s", stringMatch) == 1){
+                        else if (sscanf(current, "+ ENDPIECES%s", server_placeholder) == 1){
                             snprintf(client_msg, MSGLEN, "THINKING\n");
                             // sending
                             sendClientMsg(socket_file_descriptor);
+                            memset(server_placeholder, 0, MATCHLEN);
                         }
 
                         else if (sscanf(current, "+ OKTHI%s", server_placeholder) == 1){
@@ -176,21 +174,36 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player) {
 
                             /* ---------------------- arbitrary end-point for shmem testing ---------------------- */
                             
-                            shmid = create_shared_memory(game_and_players.game_info.total_players);
-                        
-                            all_info * shm_info;
-                            shm_info = (all_info*) shmat(shmid, NULL, 0);
+                            // create shared memory segment
+                            int shmid_for_info = create_shared_memory(game_and_players.game_info.total_players);
 
+                            // give that new shmid to our other process
+                            * shmid_ptr = shmid_for_info;
+                        
+                            // attach to shared memory segment
+                            all_info * shm_info;
+                            shm_info = (all_info*) shmat(shmid_for_info, NULL, 0);
+                            if (shm_info == (void *) -1) {
+                                printf("Error attaching shared memory.\n");
+                                perror("shmat");
+                            }
+                            
+                            // add our local structs to the shared memory segment
                             shm_info->game_info = game_and_players.game_info;
                             for (size_t n = 0; n <= game_and_players.game_info.total_players - 1; n++) {
                                 shm_info->all_players_info[n] = game_and_players.all_players_info[n];
                             }
 
+                            // print the summary from the child's perspective
                             printf("---------------------------- CHILD ----------------------------\n");
-                            printf("game name: %s\nour player: %d\ntotalplayers: %d\nconnector id: %d\nthinker id: %d\n", shm_info->game_info.game_name, shm_info->game_info.our_playernum, shm_info->game_info.total_players, shm_info->game_info.connector_id, shm_info->game_info.thinker_id);
+                            printf("game name: %s\nour player: %d\ntotal players: %d\nmaximum moves: %d\ntotal pieces: %d\nconnector id: %d\nthinker id: %d\n", shm_info->game_info.game_name, shm_info->game_info.our_playernum, shm_info->game_info.total_players, shm_info->game_info.max_moves, shm_info->game_info.total_pieces, shm_info->game_info.connector_id, shm_info->game_info.thinker_id);
                             printf("@player num: %d\n@player name: %s\n@player flag: %d\n", shm_info->all_players_info[0].playernum, shm_info->all_players_info[0].name, shm_info->all_players_info[0].flag);
                             printf("@player num: %d\n@player name: %s\n@player flag: %d\n", shm_info->all_players_info[1].playernum, shm_info->all_players_info[1].name, shm_info->all_players_info[1].flag);
 
+                            // detach from shared memory
+                            shmdt(shmid_ptr);
+                            shmdt(shm_info);
+                            
                             exit(EXIT_SUCCESS);
 
                         }
@@ -268,6 +281,5 @@ void sendClientMsg(int socket_file_descriptor) {
     }
 
     // clear the variables for use in the next send
-    memset(stringMatch, 0, MATCHLEN);
     memset(client_msg, 0, MSGLEN);
 }

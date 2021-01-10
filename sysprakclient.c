@@ -19,8 +19,6 @@
 #define GAMEIDLEN 14
 #define CONFFILENAMELEN 128
 
-int shmid;
-
 // TODO: Errormessage when no command line arguments are passed
 // TODO: General Error handling
 
@@ -63,43 +61,58 @@ int main(int argc, char*argv[]) {
     int socket_file_descriptor;
     socket_file_descriptor = getSocketInfo(argc, argv, game_conf.hostname, game_conf.portnumber);
 
+    /* Create a shared memory to store the shmid of our other shared memory */
+    int shmid = shmget(IPC_PRIVATE, sizeof(int), IPC_CREAT | 0644);
+
     /* Divide into Connector and Thinker */
     pid_t pid = fork();
 
-    /* Connecter (Child Process) */
-    if (pid == 0) {
+    if (pid == 0) { /* Connecter (Child Process) */
+
+        int * shmid_ptr;
+        shmid_ptr = (int *) shmat(shmid, NULL, 0);
+
         printf("Child process ->  PPID: %d, PID: %d\n", getppid(), getpid());
 
         /* Enter Prolog Phase */
-        serverConnect(socket_file_descriptor, game_id, player);
-
-
-
-        // test if the array is working
-
-
+        serverConnect(socket_file_descriptor, game_id, player, shmid_ptr);        
 
     }
-    /* Thinker (Parent Process) */
-    else {
+    else { /* Thinker (Parent Process) */
         printf("Parent process -> PID: %d\n", getpid());
         printf("Waiting for child processes to finish...\n");
         wait(NULL);
         printf("Child process finished.\n");
 
-        // game_info * parent_game_info;
-        // parent_game_info = (game_info*) shmat(shmid, NULL, 0);
+        // shmid_ptr is just used to store the shmid of the actual shared memory segment
+        int * shmid_ptr;
+        shmid_ptr = (int *) shmat(shmid, NULL, 0);
 
-        all_info * shm_info;
-        shm_info = (all_info*) shmat(shmid, NULL, 0);
+        // grab the actual shmid from shmid_ptr
+        int shmid_for_info = *shmid_ptr;
 
+        // attach to shared memory
+        all_info * rcv_info;
+        rcv_info = (all_info*) shmat(shmid_for_info, NULL, 0);
+        if (rcv_info == (void *) -1) {
+            printf("Error attaching shared memory.\n");
+            perror("shmat");
+        }
+
+        // print the summary from the parent's perspective
         printf("---------------------------- PARENT ---------------------------\n");
-        printf("game name: %s\nour player: %d\ntotalplayers: %d\nconnector id: %d\nthinker id: %d\n", shm_info->game_info.game_name, shm_info->game_info.our_playernum, shm_info->game_info.total_players, shm_info->game_info.connector_id, shm_info->game_info.thinker_id);
+        printf("game name: %s\nour player: %d\ntotal players: %d\nmaximum moves: %d\ntotal pieces: %d\nconnector id: %d\nthinker id: %d\n", rcv_info->game_info.game_name, rcv_info->game_info.our_playernum, rcv_info->game_info.total_players, rcv_info->game_info.max_moves, rcv_info->game_info.total_pieces, rcv_info->game_info.connector_id, rcv_info->game_info.thinker_id);
+        printf("@player num: %d\n@player name: %s\n@player flag: %d\n", rcv_info->all_players_info[0].playernum, rcv_info->all_players_info[0].name, rcv_info->all_players_info[0].flag);
+        printf("@player num: %d\n@player name: %s\n@player flag: %d\n", rcv_info->all_players_info[1].playernum, rcv_info->all_players_info[1].name, rcv_info->all_players_info[1].flag);
 
+        // detach from shared memory
+        shmdt(shmid_ptr);
+        shmdt(rcv_info);
+
+        /* clear the shared memory segments */
+        shmctl(shmid, IPC_RMID, NULL);
+        shmctl(shmid_for_info, IPC_RMID, NULL);
     }
-
-    /* clear the shared memory segment */
-    shmctl(shmid, IPC_RMID, NULL);
 
     exit(EXIT_SUCCESS);
 }
