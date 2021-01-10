@@ -64,10 +64,6 @@ int main(int argc, char*argv[]) {
     /* Create Shared Memory */
     int shmid = create_shared_memory();
 
-    /* Create a pointer to a game_info struct from the shared mem */
-    game_info * shm_info;
-    shm_info = (game_info*) shmat(shmid, NULL, 0);
-
     /* Divide into Connector and Thinker */
     pid_t pid = fork();
 
@@ -76,15 +72,18 @@ int main(int argc, char*argv[]) {
         printf("Child process ->  PPID: %d, PID: %d\n", getppid(), getpid());
 
         /* Enter Prolog Phase */
-        game_info our_info = serverConnect(socket_file_descriptor, game_id, player);
+        // game_info our_info = serverConnect(socket_file_descriptor, game_id, player, shmid);
+        serverConnect(socket_file_descriptor, game_id, player, shmid);
 
-        printf("====> child sees game name: %s\n", our_info.game_name);
+        // printf("====> child sees game name: %s\n", our_info.game_name);
 
         /* Save our struct info from the prolog phase to that pointer */
-        *shm_info = our_info;
+        // *shm_info = our_info;
 
 
         // test if the array is working
+
+
 
     }
     /* Thinker (Parent Process) */
@@ -97,7 +96,13 @@ int main(int argc, char*argv[]) {
         // game_info * parent_game_info;
         // parent_game_info = (game_info*) shmat(shmid, NULL, 0);
 
-        printf("====> parent sees game name: %s\n", shm_info->game_name);
+        game_info * shm_info;
+        shm_info = (game_info*) shmat(shmid, NULL, 0);
+
+        printf("--------------------------------");
+        printf("game name: %s\nour player: %d\ntotalplayers: %d\nconnector id: %d\nthinker id: %d\n", shm_info->game_name, shm_info->our_playernum, shm_info->total_players, shm_info->connector_id, shm_info->thinker_id);
+
+        // printf("====> parent sees game name: %s\n", shm_info->game_name);
     }
 
     /* clear the shared memory segment */

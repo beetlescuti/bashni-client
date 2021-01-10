@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <sys/shm.h>
 
 #include "performConnection.h"
 #include "sharedMemory.h"
@@ -44,7 +45,11 @@ char piece;
 
 game_info our_info;
 
-game_info serverConnect(int socket_file_descriptor, char game_id[], int player) {
+int serverConnect(int socket_file_descriptor, char game_id[], int player, int shmid) {
+
+    /* Enter the PID and PPID into the our_info struct */
+    our_info.connector_id = getpid();
+    our_info.thinker_id = getppid();
 
     /* Enter an infinite while loop that calls receiveServerMsg() and then filters the
        result into the correct switch/case */
@@ -172,14 +177,11 @@ game_info serverConnect(int socket_file_descriptor, char game_id[], int player) 
                             memset(stringMatch, 0, MATCHLEN);
 
                             /* ---------------------- arbitrary end-point for shmem testing ---------------------- */
-                            // TODO: make these non-arbitrary
-                            // snprintf(our_info.game_name, NAMELEN, "test_game");
-                            our_info.total_players = 2;
-                            our_info.our_playernum = 0;
-                            our_info.connector_id = 55190;
-                            our_info.thinker_id = 55187;
-
-                            return our_info;
+                            
+                            game_info * shm_info;
+                            shm_info = (game_info*) shmat(shmid, NULL, 0);
+                            
+                            *shm_info = our_info;
 
                             exit(EXIT_SUCCESS);
 
