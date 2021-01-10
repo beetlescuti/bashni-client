@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <sys/shm.h>
 
+#include "sysprakclient.h"
 #include "performConnection.h"
 #include "sharedMemory.h"
 
@@ -15,7 +16,6 @@
 #define MSGLEN 1024
 #define MATCHLEN 1024
 #define TOKENLEN 128
-#define MAXPLAYERS 32
 
 char server_msg[MSGLEN];
 char client_msg[MSGLEN];
@@ -32,10 +32,10 @@ char server_gamename[MATCHLEN];
 int our_playernum;
 char our_playername[MATCHLEN];
 int server_totalplayers;
+int server_max_moves;
 
-// An array of player structs
-player all_players[MAXPLAYERS];
-
+// Create necessary structs
+all_info game_and_players;
 
 
 char stringMatch[MATCHLEN];
@@ -43,13 +43,13 @@ int intMatch = -1;
 char position[3];
 char piece;
 
-game_info our_info;
 
-int serverConnect(int socket_file_descriptor, char game_id[], int player, int shmid) {
 
-    /* Enter the PID and PPID into the our_info struct */
-    our_info.connector_id = getpid();
-    our_info.thinker_id = getppid();
+int serverConnect(int socket_file_descriptor, char game_id[], int player) {
+
+    /* Enter the PID and PPID into the game_info struct */
+    game_and_players.game_info.connector_id = getpid();
+    game_and_players.game_info.thinker_id = getppid();
 
     /* Enter an infinite while loop that calls receiveServerMsg() and then filters the
        result into the correct switch/case */
@@ -95,7 +95,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int sh
 
                                 // put the game name into our data structure
                                 // the "+= 2" is to increment the pointer so our string doesn't include the "+ " prefix
-                                snprintf(our_info.game_name, MATCHLEN, "%s", dividedServerMsg[i+1] += 2);
+                                snprintf(game_and_players.game_info.game_name, MATCHLEN, "%s", dividedServerMsg[i+1] += 2);
 
                                 i++;
 
@@ -118,30 +118,28 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int sh
 
                         else if (sscanf(current, "+ YOU %d %s", &our_playernum, our_playername) == 2) {
                             // put the player number and name into our data structure
-                            our_info.our_playernum = our_playernum;
+                            game_and_players.game_info.our_playernum = our_playernum;
                             // put our player info into the array of players
-                            all_players[0].playernum = our_playernum;
-                            snprintf(all_players[0].name, MATCHLEN, "%s", our_playername);
-                            all_players[0].flag = 1;
-
-                            memset(stringMatch, 0, MATCHLEN);
+                            game_and_players.all_players_info[0].playernum = our_playernum;
+                            snprintf(game_and_players.all_players_info[0].name, MATCHLEN, "%s", our_playername);
+                            game_and_players.all_players_info[0].flag = 1;
                         }
 
                         else if (sscanf(current, "+ TOTAL %d", &server_totalplayers) == 1){
                             // put the total number of players into our data structure
-                            our_info.total_players = server_totalplayers;
+                            game_and_players.game_info.total_players = server_totalplayers;
 
                             // iterate through all additional players
                             // if total players is 1 then this code is skipped and we procede
                             for (size_t j = 1; j < server_totalplayers; j++) {
-                                // scan every other player line and store in array of players
+                                // scan every player line and store in array of players
+                                char namewithoutbool[NAMELEN];
 
-                                sscanf(dividedServerMsg[i+j], "+ %d %[^\t\n] %d", &all_players[j].playernum, all_players[j].name, &all_players[j].flag);
+                                sscanf(dividedServerMsg[i+j], "+ %d %[^\t\n] %d", &game_and_players.all_players_info[j].playernum, namewithoutbool, &game_and_players.all_players_info[j].flag);
                                 
                                 // time to remove the trailing flag on the name
-                                char namewithoutbool[NAMELEN];
-                                snprintf(namewithoutbool, NAMELEN, "%s", all_players[j].name);
                                 namewithoutbool[strlen(namewithoutbool) - 2] = '\0';
+                                snprintf(game_and_players.all_players_info[j].name, NAMELEN, "%s", namewithoutbool);
                             }
 
                             i = i + server_totalplayers - 1;
@@ -152,8 +150,8 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int sh
                             memset(server_placeholder, 0, MATCHLEN);
                         }
 
-                        else if (sscanf(current, "+ MOVE %d", &intMatch) == 1){
-                            intMatch = -1;
+                        else if (sscanf(current, "+ MOVE %d", &server_max_moves) == 1){
+                            game_and_players.game_info.max_moves = server_max_moves;
                         }
 
                         else if (sscanf(current, "+ PIECESLIST %d", &intMatch) == 1){
@@ -173,15 +171,25 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int sh
                             sendClientMsg(socket_file_descriptor);
                         }
 
-                        else if (sscanf(current, "+ OKTHIN%s", stringMatch) == 1){
-                            memset(stringMatch, 0, MATCHLEN);
+                        else if (sscanf(current, "+ OKTHI%s", server_placeholder) == 1){
+                            memset(server_placeholder, 0, MATCHLEN);
 
                             /* ---------------------- arbitrary end-point for shmem testing ---------------------- */
                             
-                            game_info * shm_info;
-                            shm_info = (game_info*) shmat(shmid, NULL, 0);
-                            
-                            *shm_info = our_info;
+                            shmid = create_shared_memory(game_and_players.game_info.total_players);
+                        
+                            all_info * shm_info;
+                            shm_info = (all_info*) shmat(shmid, NULL, 0);
+
+                            shm_info->game_info = game_and_players.game_info;
+                            for (size_t n = 0; n <= game_and_players.game_info.total_players - 1; n++) {
+                                shm_info->all_players_info[n] = game_and_players.all_players_info[n];
+                            }
+
+                            printf("---------------------------- CHILD ----------------------------\n");
+                            printf("game name: %s\nour player: %d\ntotalplayers: %d\nconnector id: %d\nthinker id: %d\n", shm_info->game_info.game_name, shm_info->game_info.our_playernum, shm_info->game_info.total_players, shm_info->game_info.connector_id, shm_info->game_info.thinker_id);
+                            printf("@player num: %d\n@player name: %s\n@player flag: %d\n", shm_info->all_players_info[0].playernum, shm_info->all_players_info[0].name, shm_info->all_players_info[0].flag);
+                            printf("@player num: %d\n@player name: %s\n@player flag: %d\n", shm_info->all_players_info[1].playernum, shm_info->all_players_info[1].name, shm_info->all_players_info[1].flag);
 
                             exit(EXIT_SUCCESS);
 

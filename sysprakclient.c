@@ -19,6 +19,8 @@
 #define GAMEIDLEN 14
 #define CONFFILENAMELEN 128
 
+int shmid;
+
 // TODO: Errormessage when no command line arguments are passed
 // TODO: General Error handling
 
@@ -61,9 +63,6 @@ int main(int argc, char*argv[]) {
     int socket_file_descriptor;
     socket_file_descriptor = getSocketInfo(argc, argv, game_conf.hostname, game_conf.portnumber);
 
-    /* Create Shared Memory */
-    int shmid = create_shared_memory();
-
     /* Divide into Connector and Thinker */
     pid_t pid = fork();
 
@@ -72,13 +71,8 @@ int main(int argc, char*argv[]) {
         printf("Child process ->  PPID: %d, PID: %d\n", getppid(), getpid());
 
         /* Enter Prolog Phase */
-        // game_info our_info = serverConnect(socket_file_descriptor, game_id, player, shmid);
-        serverConnect(socket_file_descriptor, game_id, player, shmid);
+        serverConnect(socket_file_descriptor, game_id, player);
 
-        // printf("====> child sees game name: %s\n", our_info.game_name);
-
-        /* Save our struct info from the prolog phase to that pointer */
-        // *shm_info = our_info;
 
 
         // test if the array is working
@@ -96,13 +90,12 @@ int main(int argc, char*argv[]) {
         // game_info * parent_game_info;
         // parent_game_info = (game_info*) shmat(shmid, NULL, 0);
 
-        game_info * shm_info;
-        shm_info = (game_info*) shmat(shmid, NULL, 0);
+        all_info * shm_info;
+        shm_info = (all_info*) shmat(shmid, NULL, 0);
 
-        printf("--------------------------------");
-        printf("game name: %s\nour player: %d\ntotalplayers: %d\nconnector id: %d\nthinker id: %d\n", shm_info->game_name, shm_info->our_playernum, shm_info->total_players, shm_info->connector_id, shm_info->thinker_id);
+        printf("---------------------------- PARENT ---------------------------\n");
+        printf("game name: %s\nour player: %d\ntotalplayers: %d\nconnector id: %d\nthinker id: %d\n", shm_info->game_info.game_name, shm_info->game_info.our_playernum, shm_info->game_info.total_players, shm_info->game_info.connector_id, shm_info->game_info.thinker_id);
 
-        // printf("====> parent sees game name: %s\n", shm_info->game_name);
     }
 
     /* clear the shared memory segment */
