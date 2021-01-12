@@ -209,9 +209,15 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             // detach from shared memory
                             shmdt(shmid_ptr);
                             shmdt(shm_info);
-                            
+
                             exit(EXIT_SUCCESS);
 
+                        }
+
+                        else if (sscanf(current, "+ WA%s", server_placeholder) == 1){
+
+                            snprintf(client_msg, MSGLEN, "OKWAIT\n");
+                            sendClientMsg(socket_file_descriptor);
                         }
 
                         else {
