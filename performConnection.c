@@ -38,6 +38,10 @@ int server_total_pieces;
 // Create necessary structs
 all_info game_and_players;
 
+// Create ptr to all_info struct for shared memory data
+all_info * shm_info;
+
+
 
 char position[3];
 char piece;
@@ -124,12 +128,15 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             game_and_players.all_players_info[0].flag = 1;
                         }
 
+                        /* 1. write total number of players to struct
+                           2. loop through all players and write to players struct array
+                           3. create shared memory segment with total players for size */
                         else if (sscanf(current, "+ TOTAL %d", &server_totalplayers) == 1){
-                            // put the total number of players into our data structure
+                            // [1] put the total number of players into our data structure
                             game_and_players.game_info.total_players = server_totalplayers;
 
-                            // iterate through all additional players
-                            // if total players is 1 then this code is skipped and we procede
+                            // [2] iterate through all additional players
+                            //     if total players is 1 then this code is skipped and we procede
                             for (size_t j = 1; j < server_totalplayers; j++) {
                                 // scan every player line and store in array of players
                                 char namewithoutbool[NAMELEN];
@@ -140,8 +147,21 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                                 namewithoutbool[strlen(namewithoutbool) - 2] = '\0';
                                 snprintf(game_and_players.all_players_info[j].name, NAMELEN, "%s", namewithoutbool);
                             }
-
                             i = i + server_totalplayers - 1;
+
+                            // [3] create shared memory and attach
+                            // create shared memory segment
+                            int shmid_for_info = create_shared_memory(game_and_players.game_info.total_players);
+
+                            // give that new shmid to our other process
+                            * shmid_ptr = shmid_for_info;
+                        
+                            // attach to shared memory segment
+                            shm_info = (all_info*) shmat(shmid_for_info, NULL, 0);
+                            if (shm_info == (void *) -1) {
+                                printf("Error attaching shared memory.\n");
+                                perror("shmat");
+                            }
 
                         }
 
@@ -171,23 +191,9 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
 
                         else if (sscanf(current, "+ OKTHI%s", server_placeholder) == 1){
                             memset(server_placeholder, 0, MATCHLEN);
-
-                            /* ---------------------- arbitrary end-point for shmem testing ---------------------- */
                             
-                            // create shared memory segment
-                            int shmid_for_info = create_shared_memory(game_and_players.game_info.total_players);
+                            // TODO: move this code further along as the protokoll continues...
 
-                            // give that new shmid to our other process
-                            * shmid_ptr = shmid_for_info;
-                        
-                            // attach to shared memory segment
-                            all_info * shm_info;
-                            shm_info = (all_info*) shmat(shmid_for_info, NULL, 0);
-                            if (shm_info == (void *) -1) {
-                                printf("Error attaching shared memory.\n");
-                                perror("shmat");
-                            }
-                            
                             // add our local structs to the shared memory segment
                             shm_info->game_info = game_and_players.game_info;
                             for (size_t n = 0; n <= game_and_players.game_info.total_players - 1; n++) {
@@ -199,7 +205,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             printf("game name: %s\nour player: %d\ntotal players: %d\nmaximum moves: %d\ntotal pieces: %d\nconnector id: %d\nthinker id: %d\n", shm_info->game_info.game_name, shm_info->game_info.our_playernum, shm_info->game_info.total_players, shm_info->game_info.max_moves, shm_info->game_info.total_pieces, shm_info->game_info.connector_id, shm_info->game_info.thinker_id);
                             printf("@player num: %d\n@player name: %s\n@player flag: %d\n", shm_info->all_players_info[0].playernum, shm_info->all_players_info[0].name, shm_info->all_players_info[0].flag);
                             printf("@player num: %d\n@player name: %s\n@player flag: %d\n", shm_info->all_players_info[1].playernum, shm_info->all_players_info[1].name, shm_info->all_players_info[1].flag);
-
+                            
                             // detach from shared memory
                             shmdt(shmid_ptr);
                             shmdt(shm_info);
