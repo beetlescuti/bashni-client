@@ -48,15 +48,11 @@ char horizontal;
 int vertical;
 char piece[PIECESLEN];
 
-// Create necessary structs
-all_info game_and_players;
-
 // Create ptr to all_info struct for shared memory data
 all_info * shm_info;
 
-
-
-
+// Create necessary structs
+all_info game_and_players;
 
 
 
@@ -65,6 +61,9 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
     /* Enter the PID and PPID into the game_info struct */
     game_and_players.game_info.connector_id = getpid();
     game_and_players.game_info.thinker_id = getppid();
+
+    /* fill game board with 0's */
+    for (size_t k = 0; k <= 7; k++) memset(game_and_players.game_info.board[k], 0, sizeof(int[8]));
 
     /* Enter an infinite while loop that calls receiveServerMsg() and then filters the
        result into the correct switch/case */
@@ -182,7 +181,6 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             memset(server_placeholder, 0, MATCHLEN);
                         }
 
-
                         else if (sscanf(current, "+ MOVE %d", &server_max_moves) == 1){
                             game_and_players.game_info.max_moves = server_max_moves;
                         }
@@ -192,45 +190,48 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                         }
 
                         else if (sscanf(current, "+ %[^@]@%c%d", piece, &horizontal, &vertical) == 3){
-                           // printf("%s, %c, %d", piece, horizontal, vertical);
+                            // printf("%s, %c, %d", piece, horizontal, vertical);
 
-                           int piece_size = strlen(piece);
+                            // get piece stack size from server
+                            int piece_size = strlen(piece);
+                            
+                            // make int negative if piece is black
+                            if (piece[piece_size-1] == 'b' || piece[piece_size-1] == 'B'){
+                                piece_size =  piece_size * (-1);
+                            }
 
-                           if (piece[piece_size] == 'b' || piece[piece_size] == 'B'){
-                             piece_size =  piece_size * (-1);
-                           }
-
-
+                            // put it in the right position
                             switch (horizontal) {
                                 case 'A':
-                                    game_and_players.board[0][vertical-1] = piece_size;
+                                    game_and_players.game_info.board[0][vertical-1] = piece_size;
                                     break;
                                 case 'B':
-                                    game_and_players.board[1][vertical-1] = piece_size;
+                                    game_and_players.game_info.board[1][vertical-1] = piece_size;
                                     break;
                                 case 'C':
-                                    game_and_players.board[2][vertical-1] = piece_size;
+                                    game_and_players.game_info.board[2][vertical-1] = piece_size;
                                     break;
                                 case 'D':
-                                    game_and_players.board[3][vertical-1] = piece_size;
+                                    game_and_players.game_info.board[3][vertical-1] = piece_size;
                                     break;
                                 case 'E':
-                                    game_and_players.board[4][vertical-1] = piece_size;
+                                    game_and_players.game_info.board[4][vertical-1] = piece_size;
                                     break;
                                 case 'F':
-                                    game_and_players.board[5][vertical-1] = piece_size;
+                                    game_and_players.game_info.board[5][vertical-1] = piece_size;
                                     break;
                                 case 'G':
-                                    game_and_players.board[6][vertical-1] = piece_size;
+                                    game_and_players.game_info.board[6][vertical-1] = piece_size;
                                     break;
                                 case 'H':
-                                    game_and_players.board[7][vertical-1] = piece_size;
+                                    game_and_players.game_info.board[7][vertical-1] = piece_size;
                                     break;
                                 default:
                                     printf("Not a valid position");
                                     break;
                             }
-                            //
+
+                            // clear those variables
                             memset(piece, 0, PIECESLEN);
                             horizontal = -1;
                             vertical = -1;
@@ -259,7 +260,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             printf("game name: %s\nour player: %d\ntotal players: %d\nmaximum moves: %d\ntotal pieces: %d\nconnector id: %d\nthinker id: %d\n", shm_info->game_info.game_name, shm_info->game_info.our_playernum, shm_info->game_info.total_players, shm_info->game_info.max_moves, shm_info->game_info.total_pieces, shm_info->game_info.connector_id, shm_info->game_info.thinker_id);
                             printf("@player num: %d\n@player name: %s\n@player flag: %d\n", shm_info->all_players_info[0].playernum, shm_info->all_players_info[0].name, shm_info->all_players_info[0].flag);
                             printf("@player num: %d\n@player name: %s\n@player flag: %d\n", shm_info->all_players_info[1].playernum, shm_info->all_players_info[1].name, shm_info->all_players_info[1].flag);
-                            
+
                             // detach from shared memory
                             shmdt(shmid_ptr);
                             shmdt(shm_info);

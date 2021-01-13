@@ -1,18 +1,19 @@
-#include<sys/types.h>
-#include<sys/socket.h>
-#include<netinet/in.h>
-#include<arpa/inet.h>
-#include<unistd.h>
-#include<stdlib.h>
-#include<stdio.h>
-#include<string.h>
-#include<stdbool.h>
-#include<netdb.h>
-#include<sys/wait.h>
-#include<sys/shm.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+#include <netdb.h>
+#include <sys/wait.h>
+#include <sys/shm.h>
 
 #include "config.h"
 #include "performConnection.h"
+#include "printBoard.h"
 #include "sharedMemory.h"
 #include "sysprakclient.h"
 
@@ -105,6 +106,11 @@ int main(int argc, char*argv[]) {
         printf("@player num: %d\n@player name: %s\n@player flag: %d\n", rcv_info->all_players_info[0].playernum, rcv_info->all_players_info[0].name, rcv_info->all_players_info[0].flag);
         printf("@player num: %d\n@player name: %s\n@player flag: %d\n", rcv_info->all_players_info[1].playernum, rcv_info->all_players_info[1].name, rcv_info->all_players_info[1].flag);
 
+
+        // print board
+        // int rcv_board[7][7] = rcv_info->board;
+        printboard(rcv_info->game_info.board);
+        
         // detach from shared memory
         shmdt(shmid_ptr);
         shmdt(rcv_info);
