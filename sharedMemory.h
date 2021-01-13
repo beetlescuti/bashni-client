@@ -25,6 +25,7 @@ typedef struct {
 typedef struct {
     game_info game_info;
     player_info all_players_info[MAXPLAYERS];
+    int board[8][8];
 } all_info;
 
 int create_shared_memory();

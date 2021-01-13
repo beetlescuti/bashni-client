@@ -12,10 +12,20 @@
 #include "sharedMemory.h"
 
 // TODO: implement wait sequence
+// TODO: What to do if no free player
 
 #define MSGLEN 1024
 #define MATCHLEN 1024
 #define TOKENLEN 128
+#define PIECESLEN 24
+#define A 1
+#define B 2
+#define C 3
+#define D 4
+#define E 5
+#define F 6
+#define G 7
+#define H 8
 
 char server_msg[MSGLEN];
 char client_msg[MSGLEN];
@@ -34,6 +44,9 @@ char our_playername[MATCHLEN];
 int server_totalplayers;
 int server_max_moves;
 int server_total_pieces;
+char horizontal;
+int vertical;
+char piece[PIECESLEN];
 
 // Create necessary structs
 all_info game_and_players;
@@ -43,8 +56,7 @@ all_info * shm_info;
 
 
 
-char position[3];
-char piece;
+
 
 
 
@@ -119,12 +131,13 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             }
                         }
 
-                        else if (sscanf(current, "+ YOU %d %s", &our_playernum, our_playername) == 2) {
+                        else if (sscanf(current, "+ YOU %d %[^\t\n]", &our_playernum, our_playername) == 2) {
                             // put the player number and name into our data structure
                             game_and_players.game_info.our_playernum = our_playernum;
                             // put our player info into the array of players
                             game_and_players.all_players_info[0].playernum = our_playernum;
                             snprintf(game_and_players.all_players_info[0].name, MATCHLEN, "%s", our_playername);
+                            printf("player name from server: %s \n",our_playername);
                             game_and_players.all_players_info[0].flag = 1;
                         }
 
@@ -142,7 +155,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                                 char namewithoutbool[NAMELEN];
 
                                 sscanf(dividedServerMsg[i+j], "+ %d %[^\t\n] %d", &game_and_players.all_players_info[j].playernum, namewithoutbool, &game_and_players.all_players_info[j].flag);
-                                
+                                printf("S: %s", dividedServerMsg[i+j]);
                                 // time to remove the trailing flag on the name
                                 namewithoutbool[strlen(namewithoutbool) - 2] = '\0';
                                 snprintf(game_and_players.all_players_info[j].name, NAMELEN, "%s", namewithoutbool);
@@ -169,6 +182,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             memset(server_placeholder, 0, MATCHLEN);
                         }
 
+
                         else if (sscanf(current, "+ MOVE %d", &server_max_moves) == 1){
                             game_and_players.game_info.max_moves = server_max_moves;
                         }
@@ -177,9 +191,49 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             game_and_players.game_info.total_pieces = server_total_pieces;
                         }
 
-                        else if (sscanf(current, "+ %c@%s", &piece, position) == 2){
-                            memset(position, 0, 3);
-                            piece = '0';
+                        else if (sscanf(current, "+ %[^@]@%c%d", piece, &horizontal, &vertical) == 3){
+                           // printf("%s, %c, %d", piece, horizontal, vertical);
+
+                           int piece_size = strlen(piece);
+
+                           if (piece[piece_size] == 'b' || piece[piece_size] == 'B'){
+                             piece_size =  piece_size * (-1);
+                           }
+
+
+                            switch (horizontal) {
+                                case 'A':
+                                    game_and_players.board[0][vertical-1] = piece_size;
+                                    break;
+                                case 'B':
+                                    game_and_players.board[1][vertical-1] = piece_size;
+                                    break;
+                                case 'C':
+                                    game_and_players.board[2][vertical-1] = piece_size;
+                                    break;
+                                case 'D':
+                                    game_and_players.board[3][vertical-1] = piece_size;
+                                    break;
+                                case 'E':
+                                    game_and_players.board[4][vertical-1] = piece_size;
+                                    break;
+                                case 'F':
+                                    game_and_players.board[5][vertical-1] = piece_size;
+                                    break;
+                                case 'G':
+                                    game_and_players.board[6][vertical-1] = piece_size;
+                                    break;
+                                case 'H':
+                                    game_and_players.board[7][vertical-1] = piece_size;
+                                    break;
+                                default:
+                                    printf("Not a valid position");
+                                    break;
+                            }
+                            //
+                            memset(piece, 0, PIECESLEN);
+                            horizontal = -1;
+                            vertical = -1;
                         }
 
                         else if (sscanf(current, "+ ENDPIECES%s", server_placeholder) == 1){
