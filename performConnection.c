@@ -6,10 +6,12 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/shm.h>
+#include <signal.h>
 
 #include "sysprakclient.h"
 #include "performConnection.h"
 #include "sharedMemory.h"
+#include "printBoard.h"
 
 // TODO: implement wait sequence
 // TODO: What to do if no free player
@@ -53,8 +55,6 @@ all_info * shm_info;
 
 // Create necessary structs
 all_info game_and_players;
-
-
 
 int serverConnect(int socket_file_descriptor, char game_id[], int player, int * shmid_ptr) {
 
@@ -261,10 +261,16 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             printf("@player num: %d\n@player name: %s\n@player flag: %d\n", shm_info->all_players_info[0].playernum, shm_info->all_players_info[0].name, shm_info->all_players_info[0].flag);
                             printf("@player num: %d\n@player name: %s\n@player flag: %d\n", shm_info->all_players_info[1].playernum, shm_info->all_players_info[1].name, shm_info->all_players_info[1].flag);
 
+                            printboard(shm_info->game_info.board);
+
                             // detach from shared memory
                             shmdt(shmid_ptr);
                             shmdt(shm_info);
 
+                            // send signal to parent that game info is ready
+                            kill(game_and_players.game_info.thinker_id, SIGUSR1);
+
+                            // [arbitrary] exit so that shared memory is deleted properly
                             exit(EXIT_SUCCESS);
 
                         }
