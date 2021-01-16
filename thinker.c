@@ -23,17 +23,23 @@ void think(int * shmid_ptr) {
     // grab the actual shmid from shmid_ptr
     shmid_for_info = *shmid_ptr;
 
-    // attach to shared memory 
+    // attach to shared memory
     all_info * rcv_info;
     rcv_info = (all_info*) shmat(shmid_for_info, NULL, 0);
     if (rcv_info == (void *) -1) {
     printf("Error attaching shared memory.\n");
         perror("shmat");
     }
-    
+
+    //check if think_flag was set by the connector process
+    if (rcv_info->think_flag == 1) {
+      //immediately set think_flag back to zero
+      rcv_info->think_flag = 0;
+    }
+
     // TODO: implement move thinker
     printf("thinking...\n");
-    
+
 
     // TODO: send move back through pipe
 

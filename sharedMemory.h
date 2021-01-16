@@ -26,10 +26,10 @@ typedef struct {
 typedef struct {
     game_info game_info;
     player_info all_players_info[MAXPLAYERS];
+    int think_flag;
 } all_info;
 
 int create_shared_memory();
 void struct_to_shared_memory(int shmid, game_info * info);
 
 #endif
-

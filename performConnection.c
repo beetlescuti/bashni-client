@@ -85,7 +85,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                         printf("S: %s\n", current);
 
                         // All the possible Server Messages and their corresponding actions by the client follow
-                    
+
                         if (sscanf(current, "+ MNM Gameserver %s accepting connections", server_version) == 1) {
                             // send: client version, major version must match!!
                             snprintf(client_msg, MSGLEN, "VERSION 2.3\n");
@@ -99,7 +99,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             // clear for reuse
                             memset(server_placeholder, 0, MATCHLEN);
                         }
-                        
+
                         // Check if the game that we want to join is a Bashni game. If it is, send preferred player number
                         else if (sscanf(current, "+ PLAYING %s", server_gamename) == 1){
                             if (strcmp(server_gamename, "Bashni") == 0) {
@@ -167,7 +167,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
 
                             // give that new shmid to our other process
                             * shmid_ptr = shmid_for_info;
-                        
+
                             // attach to shared memory segment
                             shm_info = (all_info*) shmat(shmid_for_info, NULL, 0);
                             if (shm_info == (void *) -1) {
@@ -194,7 +194,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
 
                             // get piece stack size from server
                             int piece_size = strlen(piece);
-                            
+
                             // make int negative if piece is black
                             if (piece[piece_size-1] == 'b' || piece[piece_size-1] == 'B'){
                                 piece_size =  piece_size * (-1);
@@ -246,7 +246,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
 
                         else if (sscanf(current, "+ OKTHI%s", server_placeholder) == 1){
                             memset(server_placeholder, 0, MATCHLEN);
-                            
+
                             // TODO: move this code further along as the protokoll continues...
 
                             // add our local structs to the shared memory segment
@@ -254,6 +254,14 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             for (size_t n = 0; n <= game_and_players.game_info.total_players - 1; n++) {
                                 shm_info->all_players_info[n] = game_and_players.all_players_info[n];
                             }
+
+                            // set think-flag in shared memory
+                            
+                            //TODO find out why this line is causing the program to exit
+                            shm_info->think_flag = 1;
+
+
+
 
                             // print the summary from the child's perspective
                             printf("---------------------------- CHILD ----------------------------\n");
@@ -287,7 +295,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             exit(EXIT_FAILURE);
                         }
                     }
-                }                
+                }
                 break;
             case '-':
                 // For debugging
