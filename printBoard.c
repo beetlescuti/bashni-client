@@ -2,8 +2,6 @@
 
 #include "sharedMemory.h"
 
-// TODO: replace the -1's with b or B respectively
-
 /* takes an all_info struct and prints the board in a readable manner */
 void printboard(int board[8][8]){
     printf("\n\n   A B C D E F G H\n");
