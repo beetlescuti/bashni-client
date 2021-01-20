@@ -12,6 +12,8 @@
 #include "performConnection.h"
 #include "sharedMemory.h"
 #include "printBoard.h"
+#include <sys/epoll.h>
+#include <limits.h>
 
 // TODO: implement wait sequence
 // TODO: What to do if no free player
@@ -274,6 +276,14 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
 
                             // send signal to parent that game info is ready
                             kill(game_and_players.game_info.thinker_id, SIGUSR1);
+
+                            // read next move
+                            char rcv_move[PIPE_BUF];
+                            sleep(1);
+                            read(fd[0],  rcv_move, PIPE_BUF);
+                            printf("received move: %s", rcv_move);
+
+                            //epoll(2, );
 
                             // [arbitrary] exit so that shared memory is deleted properly
                             exit(EXIT_SUCCESS);

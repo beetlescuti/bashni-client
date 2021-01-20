@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include <sys/shm.h>
 #include <signal.h>
+#include <limits.h>
 
 #include "thinker.h"
 #include "sysprakclient.h"
@@ -18,6 +19,8 @@
 #include "printBoard.h"
 
 int shmid_for_info;
+char move[PIPE_BUF];
+int n;
 
 void think(int * shmid_ptr) {
     // grab the actual shmid from shmid_ptr
@@ -36,9 +39,28 @@ void think(int * shmid_ptr) {
         printf("thinker_flag == %d\n", rcv_info->game_info.think_flag);
         //immediately set think_flag back to zero
         rcv_info->game_info.think_flag = 0;
+        // sind wir hell oder dunkel?
+        snprintf(move, strlen(move), "A3:B4\n");
+        if ((write (fd[1], move, strlen(move))) == -1) {
+            perror ("write");
+            exit (EXIT_FAILURE);
+        }
+
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(fd[0], &readfds);
+        int numberoffiledescriptors;
+        numberoffiledescriptors = select(fd[0]+1, &readfds, NULL, NULL, NULL);
+
+        printf("%d \n", numberoffiledescriptors);
+        char auslesen[PIPE_BUF];
+        read(fd[0],  auslesen, PIPE_BUF);
+        printf("received move: %s", auslesen);
+
+
     }
     else {
-        printf("thinker_flag == %d\n", rcv_info->game_info.think_flag);
+        printf("error: thinker_flag not set.\n");
     }
 
     // TODO: implement move thinker
