@@ -32,9 +32,13 @@ void think(int * shmid_ptr) {
     }
 
     //check if think_flag was set by the connector process
-    if (rcv_info->think_flag == 1) {
-      //immediately set think_flag back to zero
-      rcv_info->think_flag = 0;
+    if (rcv_info->game_info.think_flag == 1) {
+        printf("thinker_flag == %d\n", rcv_info->game_info.think_flag);
+        //immediately set think_flag back to zero
+        rcv_info->game_info.think_flag = 0;
+    }
+    else {
+        printf("thinker_flag == %d\n", rcv_info->game_info.think_flag);
     }
 
     // TODO: implement move thinker

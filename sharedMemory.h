@@ -13,6 +13,7 @@ typedef struct {
     int max_moves;
     int total_pieces;
     int board[8][8];
+    int think_flag;
     pid_t thinker_id;
     pid_t connector_id;
 } game_info;
@@ -26,7 +27,6 @@ typedef struct {
 typedef struct {
     game_info game_info;
     player_info all_players_info[MAXPLAYERS];
-    int think_flag;
 } all_info;
 
 int create_shared_memory();

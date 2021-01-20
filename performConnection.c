@@ -258,10 +258,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             // set think-flag in shared memory
                             
                             //TODO find out why this line is causing the program to exit
-                            shm_info->think_flag = 1;
-
-
-
+                            shm_info->game_info.think_flag = 1;
 
                             // print the summary from the child's perspective
                             printf("---------------------------- CHILD ----------------------------\n");
