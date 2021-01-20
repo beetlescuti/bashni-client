@@ -96,7 +96,7 @@ int main(int argc, char*argv[]) {
             serverConnect(socket_file_descriptor, game_id, player, child_shmid_ptr);
 
         } else { /* Thinker (Parent Process) */
-           // close(fd[0]); //Leseseite schließen
+           close(fd[0]); //Leseseite schließen
 
 
 

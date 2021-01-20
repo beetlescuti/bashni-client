@@ -40,22 +40,19 @@ void think(int * shmid_ptr) {
         //immediately set think_flag back to zero
         rcv_info->game_info.think_flag = 0;
         // sind wir hell oder dunkel?
-        snprintf(move, strlen(move), "A3:B4\n");
+
+        snprintf(move, strlen("A3:B4\n")+1, "A3:B4\n");
         if ((write (fd[1], move, strlen(move))) == -1) {
             perror ("write");
             exit (EXIT_FAILURE);
         }
 
-        fd_set readfds;
-        FD_ZERO(&readfds);
-        FD_SET(fd[0], &readfds);
-        int numberoffiledescriptors;
-        numberoffiledescriptors = select(fd[0]+1, &readfds, NULL, NULL, NULL);
-
-        printf("%d \n", numberoffiledescriptors);
-        char auslesen[PIPE_BUF];
-        read(fd[0],  auslesen, PIPE_BUF);
-        printf("received move: %s", auslesen);
+        //fd_set readfds;
+        //FD_ZERO(&readfds);
+        //FD_SET(fd[0], &readfds);
+        //int numberoffiledescriptors;
+        //numberoffiledescriptors = select(fd[0]+1, &readfds, NULL, NULL, NULL);
+        //printf("%d \n", numberoffiledescriptors);
 
 
     }
