@@ -308,17 +308,20 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                                 if (FD_ISSET(fd[0] , &readfds)){
                                     printf("Data is available now.\n");
                                     read(fd[0],  rcv_move, PIPE_BUF);
-                                    printf("received move: %s", rcv_move);}
+                                    printf("received move: %s \n", rcv_move);
+                                    snprintf(client_msg, MSGLEN, "%s", rcv_move);
+                                    sendClientMsg(socket_file_descriptor);}
                                     // TODO send move to server
                                 else if(FD_ISSET(socket_file_descriptor , &readfds)){
                                 printf("Data from server.\n");
-                                //TODO handle whatever comes from server
+                                receiveServerMsg(socket_file_descriptor);
+                                printf("Error: %s\n", server_msg);
                              }}
 
 
                             printf("%d \n", activity);
 
-                            // [arbitrary] exit so that shared memory is deleted properly
+                            // [arbitrary] exit so that shared mem  // TODO send move to serverory is deleted properly
                             exit(EXIT_SUCCESS);
 
                         }

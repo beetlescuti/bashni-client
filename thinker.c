@@ -42,10 +42,10 @@ void think(int * shmid_ptr) {
         // sind wir hell oder dunkel?
 
         snprintf(move, strlen("A3:B4\n")+1, "A3:B4\n");
-      //  if ((write (fd[1], move, strlen(move))) == -1) {
-        //    perror ("write");
-         //   exit (EXIT_FAILURE);
-      //  }
+        if ((write (fd[1], move, strlen(move))) == -1) {
+            perror ("write");
+            exit (EXIT_FAILURE);
+        }
 
 
     }
