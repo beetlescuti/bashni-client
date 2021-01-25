@@ -279,11 +279,44 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
 
                             // read next move
                             char rcv_move[PIPE_BUF];
-                            sleep(1);
-                            read(fd[0],  rcv_move, PIPE_BUF);
-                            printf("received move: %s", rcv_move);
 
-                            //epoll(2, );
+                             // Wait for message from server or from thinker
+                             fd_set readfds;
+
+                             // clear the socket set
+                             FD_ZERO(&readfds);
+
+                             // add filedescriptor as master socket to set
+                             FD_SET(socket_file_descriptor, &readfds);
+                             int max_sd = socket_file_descriptor;
+
+                             // add thinker filedescriptor as child to set
+                             FD_SET(fd[0], &readfds);
+
+                             // check for highest descriptor number
+                             if (fd[0] > max_sd){
+                                 max_sd = fd[0];
+                             }
+
+                             // wait for activity in one of the two sockets
+                            int activity;
+                            activity = select(max_sd+1, &readfds, NULL, NULL, NULL);
+
+                            if (activity == -1)
+                                perror("select()");
+                            else if (activity){
+                                if (FD_ISSET(fd[0] , &readfds)){
+                                    printf("Data is available now.\n");
+                                    read(fd[0],  rcv_move, PIPE_BUF);
+                                    printf("received move: %s", rcv_move);}
+                                    // TODO send move to server
+                                else if(FD_ISSET(socket_file_descriptor , &readfds)){
+                                printf("Data from server.\n");
+                                //TODO handle whatever comes from server
+                             }}
+
+
+                            printf("%d \n", activity);
 
                             // [arbitrary] exit so that shared memory is deleted properly
                             exit(EXIT_SUCCESS);
