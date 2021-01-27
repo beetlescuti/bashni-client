@@ -36,68 +36,43 @@ char toppiece(char board[8][8][25], int x, int y){
 // lower left corner = 2
 // lower right corner = 3
 
-char** possiblemoves(char board[8][8][25], int playernumber){
-    char ** moeglichezuege;
-    for(int x=0; x<8; x++) {
-        for (int y=0; y<8, y++){
-            if (playernumber == 0) {
-                if (toppiece[x][y] == "W"){
-                    for(int direction=TOPLEFT; direction<= BOTTOMRIGHT; direction++)
-                        printf("liste alle möglichen Züge");
-                }
-                else if(toppiece[x][y] == "w"){
-                    for(int direction=TOPLEFT direction<=TOPRIGHT; direction++)
-                        printf("liste alle möglichen Züge");
-                }
 
-                }
-            }
-            else if (playernumber == 1){
-                if (toppiece[x][y] == "B"){
-                    for(int direction=TOPLEFT; direction<= BOTTOMRIGHT; direction++) {
-                        possibletowermoves(board, x,y, direction)
-                        printf("liste alle möglichen Züge");
+char** possiblemoves(char board[8][8][25], int playernumber) {
+    char** all_possible_moves;
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 8; y++){
+            if (playernumber == 0) {
+                if (toppiece(board, x, y) == 'W'){
+                    for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
+                        possibletowermoves(board, x,y, direction);
                     }
                 }
-                else if (toppiece[x][y]== "b"){
-                    for(int direction=BOTTOMLEFT direction<=BOTTOMRIGHT; direction++)
-                        printf("liste alle möglichen Züge");
-
+                else if (toppiece(board, x, y) == 'w'){
+                    for(int direction=TOPLEFT; direction<=TOPRIGHT; direction++){
+                        possibletowermoves(board, x,y, direction);
+                    }
                 }
             }
-        }}
-    return moeglichezuege}
-
-   char ** possibletowermoves(char board[8][8][25], int x, int y, int direction){
-    char** listwithmoves;
-    return listwithmoves;
-}
-
-
-
-
-
-            switch (toppiece[x][y]) {
-                case 'W':
-                    if playernumber == 1
-                    break;
-                case 'w':
-                    snprintf(game_and_players.game_info.board[1][vertical-1], MAXTOWERLEN, "%s" , piece);
-                    break;
-                case 'B':
-                    snprintf(game_and_players.game_info.board[2][vertical-1], MAXTOWERLEN, "%s" , piece);
-                    break;
-                case 'b':
-                    snprintf(game_and_players.game_info.board[3][vertical-1], MAXTOWERLEN, "%s" , piece);
-                    break;
-                default:
-
-
-
-
+            else if (playernumber == 1) {
+                if (toppiece(board, x, y) == 'B'){
+                    for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
+                        possibletowermoves(board, x,y, direction);
+                    }
+                }
+                else if (toppiece(board, x, y) == 'b'){
+                    for(int direction=BOTTOMLEFT; direction<=BOTTOMRIGHT; direction++){
+                        possibletowermoves(board, x,y, direction);
+                    }
+                }
+            }
         }
     }
+    return all_possible_moves;
+}
 
+char ** possibletowermoves(char board[8][8][25], int x, int y, int direction){
+    char** all_possible_tower_moves;
+    return all_possible_tower_moves;
 }
 
 void think(int * shmid_ptr) {
