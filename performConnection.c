@@ -12,13 +12,11 @@
 #include "performConnection.h"
 #include "sharedMemory.h"
 #include "printBoard.h"
-#include <sys/epoll.h>
 #include <limits.h>
 
 // TODO: implement wait sequence
 // TODO: What to do if no free player
 
-#define MSGLEN 1024
 #define MATCHLEN 1024
 #define TOKENLEN 128
 #define PIECESLEN 24
@@ -195,38 +193,38 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             // printf("%s, %c, %d", piece, horizontal, vertical);
 
                             // get piece stack size from server
-                            int piece_size = strlen(piece);
+                            //int piece_size = strlen(piece);
 
                             // make int negative if piece is black
-                            if (piece[piece_size-1] == 'b' || piece[piece_size-1] == 'B'){
-                                piece_size =  piece_size * (-1);
-                            }
+                           // if (piece[piece_size-1] == 'b' || piece[piece_size-1] == 'B'){
+                             //   piece_size =  piece_size * (-1);
+                          //  }
 
                             // put it in the right position
                             switch (horizontal) {
                                 case 'A':
-                                    game_and_players.game_info.board[0][vertical-1] = piece_size;
+                                    snprintf(game_and_players.game_info.board[0][vertical-1], MAXTOWERLEN, "%s" , piece);
                                     break;
                                 case 'B':
-                                    game_and_players.game_info.board[1][vertical-1] = piece_size;
+                                    snprintf(game_and_players.game_info.board[1][vertical-1], MAXTOWERLEN, "%s" , piece);
                                     break;
                                 case 'C':
-                                    game_and_players.game_info.board[2][vertical-1] = piece_size;
+                                    snprintf(game_and_players.game_info.board[2][vertical-1], MAXTOWERLEN, "%s" , piece);
                                     break;
                                 case 'D':
-                                    game_and_players.game_info.board[3][vertical-1] = piece_size;
+                                    snprintf(game_and_players.game_info.board[3][vertical-1], MAXTOWERLEN, "%s" , piece);
                                     break;
                                 case 'E':
-                                    game_and_players.game_info.board[4][vertical-1] = piece_size;
+                                    snprintf(game_and_players.game_info.board[4][vertical-1], MAXTOWERLEN, "%s" , piece);
                                     break;
                                 case 'F':
-                                    game_and_players.game_info.board[5][vertical-1] = piece_size;
+                                    snprintf(game_and_players.game_info.board[5][vertical-1], MAXTOWERLEN, "%s" , piece);
                                     break;
                                 case 'G':
-                                    game_and_players.game_info.board[6][vertical-1] = piece_size;
+                                    snprintf(game_and_players.game_info.board[6][vertical-1], MAXTOWERLEN, "%s" , piece);
                                     break;
                                 case 'H':
-                                    game_and_players.game_info.board[7][vertical-1] = piece_size;
+                                    snprintf(game_and_players.game_info.board[7][vertical-1], MAXTOWERLEN, "%s" , piece);
                                     break;
                                 default:
                                     printf("Not a valid position");
@@ -278,7 +276,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             kill(game_and_players.game_info.thinker_id, SIGUSR1);
 
                             // read next move
-                            char rcv_move[PIPE_BUF];
+                            char rcv_move[MSGLEN];
 
                              // Wait for message from server or from thinker
                              fd_set readfds;
@@ -307,7 +305,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             else if (activity){
                                 if (FD_ISSET(fd[0] , &readfds)){
                                     printf("Data is available now.\n");
-                                    read(fd[0],  rcv_move, PIPE_BUF);
+                                    read(fd[0],  rcv_move, MSGLEN);
                                     printf("received move: %s \n", rcv_move);
                                     snprintf(client_msg, MSGLEN, "%s", rcv_move);
                                     sendClientMsg(socket_file_descriptor);}

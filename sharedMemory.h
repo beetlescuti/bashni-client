@@ -2,6 +2,8 @@
 
 #define NAMELEN 1024
 #define MAXPLAYERS 32
+#define MAXTOWERLEN 25
+#define BOARDSIZE 8
 
 #ifndef sharedMemory
 #define sharedMemory
@@ -12,7 +14,7 @@ typedef struct {
     int total_players;
     int max_moves;
     int total_pieces;
-    int board[8][8];
+    char board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
     int think_flag;
     pid_t thinker_id;
     pid_t connector_id;

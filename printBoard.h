@@ -3,7 +3,7 @@
 #ifndef printBoard
 #define printBoard
 
-void printboard(int board[8][8]);
+void printboard(char board[8][8][25]);
 
 #endif
 
