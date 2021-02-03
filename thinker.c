@@ -38,20 +38,54 @@ char tower_move[MAXMOVELEN];
 bool break_case = true;
 
 
-char toppiece(char board[8][8][25], int x, int y){
-    char piece = ' ';
-    if (board[x][y][strlen(board[x][y])-1]) {
-        piece = board[x][y][strlen(board[x][y])-1];
+void think(int * shmid_ptr) {
+    // grab the actual shmid from shmid_ptr
+    shmid_for_info = *shmid_ptr;
+
+    // attach to shared memory
+    all_info * rcv_info;
+    rcv_info = (all_info*) shmat(shmid_for_info, NULL, 0);
+    if (rcv_info == (void *) -1) {
+    printf("Error attaching shared memory.\n");
+        perror("shmat");
     }
-    return piece;
+
+    //check if think_flag was set by the connector process
+    if (rcv_info->game_info.think_flag == 1) {
+        printf("thinker_flag == %d\n", rcv_info->game_info.think_flag);
+        //immediately set think_flag back to zero
+        rcv_info->game_info.think_flag = 0;
+        // sind wir hell oder dunkel?
+
+        snprintf(move, strlen("A3:B4\n")+1, "A3:B4\n");
+
+        possiblemoves(rcv_info->game_info.board);
+
+        if ((write (fd[1], move, strlen(move))) == -1) {
+            perror ("write");
+            exit (EXIT_FAILURE);
+        }
+
+
+    }
+    else {
+        printf("error: thinker_flag not set.\n");
+    }
+
+    // set our player number
+    our_playernum = rcv_info->game_info.our_playernum;
+
+    printf("thinking...\n");
+
+    // TODO: send move back through pipe
+
+
+    // detach from shared memory
+    shmdt(shmid_ptr);
+    shmdt(rcv_info);
 }
 
-// upper left corner = 0
-// upper right corner = 1
-// lower left corner = 2
-// lower right corner = 3
-
-
+/* calculates the possible moves of all of our pieces */
 char** possiblemoves(char board[8][8][25]) {
     // char** all_possible_moves[] = NULL;
     static char all_possible_moves[MAXMOVES][MAXMOVELEN];
@@ -71,7 +105,6 @@ char** possiblemoves(char board[8][8][25]) {
                         snprintf(all_possible_tower_moves[num_moves], MAXMOVELEN, "%s", possibletowermoves(board, x, y, direction));
                         num_moves++;
                     }
-                    // printf("MOVE: %s\n", all_possible_tower_moves[num_moves]);
                 }
             }
             else if (our_playernum == 1) {
@@ -91,89 +124,54 @@ char** possiblemoves(char board[8][8][25]) {
     return (char**)all_possible_moves;
 }
 
-/* returns empty string if no move availalbe */
+/* calculates the possible moves of ONE pieces in ONE direction,
+   this should be looped over in possiblemoves,
+   returns empty string if no moves availalbe */
 char* possibletowermoves(char board[8][8][25], int x, int y, int direction){
     int pos_x = x;
     int pos_y = y;
 
     if (direction == TOPLEFT) {
+        break_case = true;
         memset(tower_move, 0, MAXMOVELEN);
         while (pos_x >= 0 && pos_y <= 7 && break_case) {
             pos_x--;
             pos_y++;
             
             calc_move(board, x, y, pos_x, pos_y);
-            break_case = true;
-
-            // /* catch case for edge of board */
-            // if (pos_x < 0 || pos_x > 7 || pos_y < 0 || pos_y > 7) {
-            // }
-            // else {
-            //     if (our_playernum == 0) {
-            //         switch (toppiece(board, pos_x, pos_y)) {
-            //             case 'w':
-            //                 break_case = false; 
-            //                 break;
-            //             case 'W':
-            //                 break_case = false; 
-            //                 break;
-            //             case 'b':
-            //                 break_case = false;
-            //                 break;
-            //                 // A3:B4++postowmoves(new_pos)
-            //                 //
-            //             case 'B':
-            //                 break_case = false;
-            //                 break;
-            //             case ' ':
-            //                 if (strcmp(tower_move, "") == 0) {
-            //                     char pre_pos[POSLEN];
-            //                     snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
-            //                     char post_pos[POSLEN];
-            //                     snprintf(post_pos, POSLEN, "%s", translate_pos(pos_x, pos_y));
-
-            //                     snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
-            //                     printf("MOVE: %s\n", tower_move);
-            //                     break_case = false;
-            //                 } 
-            //                 break;
-            //         }
-            //     }
-            //     else if (our_playernum == 1) {
-
-            //     }
-            // }
             
         }
     }
-    if (direction == TOPRIGHT) {
-        while (pos_x <= 7 && pos_y <= 7) {
+    else if (direction == TOPRIGHT) {
+        break_case = true;
+        memset(tower_move, 0, MAXMOVELEN);
+        while (pos_x <= 7 && pos_y <= 7 && break_case) {
             pos_x++;
-            pos_y++; 
+            pos_y++;
+
+            calc_move(board, x, y, pos_x, pos_y); 
         }
     }
-    if (direction == BOTTOMLEFT) {
-        while (pos_x >= 0 && pos_y >= 0) {
+    else if (direction == BOTTOMLEFT) {
+        while (pos_x >= 0 && pos_y >= 0 && break_case) {
             pos_x--;
             pos_y--;       
         }
     }
-    if (direction == BOTTOMRIGHT) {
-        while (pos_x <= 7 && pos_y >= 0) {
+    else if (direction == BOTTOMRIGHT) {
+        while (pos_x <= 7 && pos_y >= 0 && break_case) {
             pos_x++;
             pos_y--;
         }
     }
 
-    return tower_move;
 }
 
+/* given a piece and a directions, calculates whether a move is valid */
 void calc_move(char board[8][8][25], int x, int y, int pos_x, int pos_y) {
 
     /* catch case for edge of board */
-    if (pos_x < 0 || pos_x > 7 || pos_y < 0 || pos_y > 7) {
-    }
-    else {
+    if (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7) {
         if (our_playernum == 0) {
             switch (toppiece(board, pos_x, pos_y)) {
                 case 'w':
@@ -206,68 +204,23 @@ void calc_move(char board[8][8][25], int x, int y, int pos_x, int pos_y) {
 
         }
     }
+
 }
 
-            
-
-void think(int * shmid_ptr) {
-    // grab the actual shmid from shmid_ptr
-    shmid_for_info = *shmid_ptr;
-
-    // attach to shared memory
-    all_info * rcv_info;
-    rcv_info = (all_info*) shmat(shmid_for_info, NULL, 0);
-    if (rcv_info == (void *) -1) {
-    printf("Error attaching shared memory.\n");
-        perror("shmat");
+/* returns the value of the top piece from board coordinates */
+char toppiece(char board[8][8][25], int x, int y){
+    char piece = ' ';
+    if (board[x][y][strlen(board[x][y])-1]) {
+        piece = board[x][y][strlen(board[x][y])-1];
     }
-
-    //check if think_flag was set by the connector process
-    if (rcv_info->game_info.think_flag == 1) {
-        printf("thinker_flag == %d\n", rcv_info->game_info.think_flag);
-        //immediately set think_flag back to zero
-        rcv_info->game_info.think_flag = 0;
-        // sind wir hell oder dunkel?
-
-        snprintf(move, strlen("A3:B4\n")+1, "A3:B4\n");
-
-        possiblemoves(rcv_info->game_info.board);
-
-        // printf("MOVE: %s\n", possibletowermoves(rcv_info->game_info.board, 4, 2, TOPLEFT));
-
-            
-
-        if ((write (fd[1], move, strlen(move))) == -1) {
-            perror ("write");
-            exit (EXIT_FAILURE);
-        }
-
-
-    }
-    else {
-        printf("error: thinker_flag not set.\n");
-    }
-
-    // set our player number
-    our_playernum = rcv_info->game_info.our_playernum;
-
-    // TODO: implement move thinker
-    printf("thinking...\n");
-
-
-    // TODO: send move back through pipe
-
-
-    // detach from shared memory
-    shmdt(shmid_ptr);
-    shmdt(rcv_info);
+    return piece;
 }
 
+/* translates an x and y coord into a protocoll readable format
+   for example: 0, 0 becomes A1 */
 char* translate_pos(int x, int y) {
     static char position[POSLEN];
     memset(position, 0, POSLEN);
-
-
 
     switch (x) {
         case 0:
