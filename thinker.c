@@ -24,12 +24,26 @@
 #define BOTTOMLEFT 2
 #define BOTTOMRIGHT 3
 
+// 5 for first move, 11 max partial moves with 3 chars each, plus nullbyte
+#define MAXMOVELEN 5 + 11*3 + 1
+#define MAXMOVES 500
+#define POSLEN 3
+
 int shmid_for_info;
 char move[MSGLEN];
 int n;
+int our_playernum;
+
+char tower_move[MAXMOVELEN];
+bool break_case = true;
+
 
 char toppiece(char board[8][8][25], int x, int y){
-    return board[x][y][strlen(board[x][y])-1];
+    char piece = ' ';
+    if (board[x][y][strlen(board[x][y])-1]) {
+        piece = board[x][y][strlen(board[x][y])-1];
+    }
+    return piece;
 }
 
 // upper left corner = 0
@@ -38,23 +52,29 @@ char toppiece(char board[8][8][25], int x, int y){
 // lower right corner = 3
 
 
-char** possiblemoves(char board[8][8][25], int playernumber) {
-    char** all_possible_moves;
+char** possiblemoves(char board[8][8][25]) {
+    // char** all_possible_moves[] = NULL;
+    static char all_possible_moves[MAXMOVES][MAXMOVELEN];
+    int num_moves = 0;
     for (int x = 0; x < 8; x++) {
         for (int y = 0; y < 8; y++){
-            if (playernumber == 0) {
+            if (our_playernum == 0) {
                 if (toppiece(board, x, y) == 'W'){
+                    char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
                     for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
                         possibletowermoves(board, x,y, direction);
                     }
                 }
                 else if (toppiece(board, x, y) == 'w'){
+                    char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
                     for(int direction=TOPLEFT; direction<=TOPRIGHT; direction++){
-                        possibletowermoves(board, x,y, direction);
+                        snprintf(all_possible_tower_moves[num_moves], MAXMOVELEN, "%s", possibletowermoves(board, x, y, direction));
+                        num_moves++;
                     }
+                    // printf("MOVE: %s\n", all_possible_tower_moves[num_moves]);
                 }
             }
-            else if (playernumber == 1) {
+            else if (our_playernum == 1) {
                 if (toppiece(board, x, y) == 'B'){
                     for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
                         possibletowermoves(board, x,y, direction);
@@ -68,13 +88,127 @@ char** possiblemoves(char board[8][8][25], int playernumber) {
             }
         }
     }
-    return all_possible_moves;
+    return (char**)all_possible_moves;
 }
 
-char ** possibletowermoves(char board[8][8][25], int x, int y, int direction){
-    char** all_possible_tower_moves;
-    return all_possible_tower_moves;
+/* returns empty string if no move availalbe */
+char* possibletowermoves(char board[8][8][25], int x, int y, int direction){
+    int pos_x = x;
+    int pos_y = y;
+
+    if (direction == TOPLEFT) {
+        memset(tower_move, 0, MAXMOVELEN);
+        while (pos_x >= 0 && pos_y <= 7 && break_case) {
+            pos_x--;
+            pos_y++;
+            
+            calc_move(board, x, y, pos_x, pos_y);
+            break_case = true;
+
+            // /* catch case for edge of board */
+            // if (pos_x < 0 || pos_x > 7 || pos_y < 0 || pos_y > 7) {
+            // }
+            // else {
+            //     if (our_playernum == 0) {
+            //         switch (toppiece(board, pos_x, pos_y)) {
+            //             case 'w':
+            //                 break_case = false; 
+            //                 break;
+            //             case 'W':
+            //                 break_case = false; 
+            //                 break;
+            //             case 'b':
+            //                 break_case = false;
+            //                 break;
+            //                 // A3:B4++postowmoves(new_pos)
+            //                 //
+            //             case 'B':
+            //                 break_case = false;
+            //                 break;
+            //             case ' ':
+            //                 if (strcmp(tower_move, "") == 0) {
+            //                     char pre_pos[POSLEN];
+            //                     snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
+            //                     char post_pos[POSLEN];
+            //                     snprintf(post_pos, POSLEN, "%s", translate_pos(pos_x, pos_y));
+
+            //                     snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+            //                     printf("MOVE: %s\n", tower_move);
+            //                     break_case = false;
+            //                 } 
+            //                 break;
+            //         }
+            //     }
+            //     else if (our_playernum == 1) {
+
+            //     }
+            // }
+            
+        }
+    }
+    if (direction == TOPRIGHT) {
+        while (pos_x <= 7 && pos_y <= 7) {
+            pos_x++;
+            pos_y++; 
+        }
+    }
+    if (direction == BOTTOMLEFT) {
+        while (pos_x >= 0 && pos_y >= 0) {
+            pos_x--;
+            pos_y--;       
+        }
+    }
+    if (direction == BOTTOMRIGHT) {
+        while (pos_x <= 7 && pos_y >= 0) {
+            pos_x++;
+            pos_y--;
+        }
+    }
+
+    return tower_move;
 }
+
+void calc_move(char board[8][8][25], int x, int y, int pos_x, int pos_y) {
+
+    /* catch case for edge of board */
+    if (pos_x < 0 || pos_x > 7 || pos_y < 0 || pos_y > 7) {
+    }
+    else {
+        if (our_playernum == 0) {
+            switch (toppiece(board, pos_x, pos_y)) {
+                case 'w':
+                    break_case = false; 
+                    break;
+                case 'W':
+                    break_case = false; 
+                    break;
+                case 'b':
+                    break_case = false;
+                    break;
+                case 'B':
+                    break_case = false;
+                    break;
+                case ' ':
+                    if (strcmp(tower_move, "") == 0) {
+                        char pre_pos[POSLEN];
+                        snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
+                        char post_pos[POSLEN];
+                        snprintf(post_pos, POSLEN, "%s", translate_pos(pos_x, pos_y));
+
+                        snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+                        printf("MOVE: %s\n", tower_move);
+                        break_case = false;
+                    } 
+                    break;
+            }
+        }
+        else if (our_playernum == 1) {
+
+        }
+    }
+}
+
+            
 
 void think(int * shmid_ptr) {
     // grab the actual shmid from shmid_ptr
@@ -96,6 +230,13 @@ void think(int * shmid_ptr) {
         // sind wir hell oder dunkel?
 
         snprintf(move, strlen("A3:B4\n")+1, "A3:B4\n");
+
+        possiblemoves(rcv_info->game_info.board);
+
+        // printf("MOVE: %s\n", possibletowermoves(rcv_info->game_info.board, 4, 2, TOPLEFT));
+
+            
+
         if ((write (fd[1], move, strlen(move))) == -1) {
             perror ("write");
             exit (EXIT_FAILURE);
@@ -107,6 +248,9 @@ void think(int * shmid_ptr) {
         printf("error: thinker_flag not set.\n");
     }
 
+    // set our player number
+    our_playernum = rcv_info->game_info.our_playernum;
+
     // TODO: implement move thinker
     printf("thinking...\n");
 
@@ -117,4 +261,46 @@ void think(int * shmid_ptr) {
     // detach from shared memory
     shmdt(shmid_ptr);
     shmdt(rcv_info);
+}
+
+char* translate_pos(int x, int y) {
+    static char position[POSLEN];
+    memset(position, 0, POSLEN);
+
+
+
+    switch (x) {
+        case 0:
+            position[0] = 'A';
+            break;
+        case 1:
+            position[0] = 'B';
+            break;
+        case 2:
+            position[0] = 'C';
+            break;
+        case 3:
+            position[0] = 'D';
+            break;
+        case 4:
+            position[0] = 'E';
+            break;
+        case 5:
+            position[0] = 'F';
+            break;
+        case 6:
+            position[0] = 'G';
+            break;
+        case 7:
+            position[0] = 'H';
+            break;
+        default:
+            printf("Error: how did we get here...\n");
+            break;
+    }
+
+    // the + '0' converts the int to a char with the same value
+    position[1] = y+1 + '0';
+
+    return position;
 }
