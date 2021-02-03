@@ -7,12 +7,12 @@
 #include <sys/socket.h>
 #include <sys/shm.h>
 #include <signal.h>
+#include <limits.h>
 
 #include "sysprakclient.h"
 #include "performConnection.h"
 #include "sharedMemory.h"
 #include "printBoard.h"
-#include <limits.h>
 
 // TODO: implement wait sequence
 // TODO: What to do if no free player
@@ -20,14 +20,6 @@
 #define MATCHLEN 1024
 #define TOKENLEN 128
 #define PIECESLEN 24
-#define A 1
-#define B 2
-#define C 3
-#define D 4
-#define E 5
-#define F 6
-#define G 7
-#define H 8
 
 char server_msg[MSGLEN];
 char client_msg[MSGLEN];
@@ -154,7 +146,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                                 char namewithoutbool[NAMELEN];
 
                                 sscanf(dividedServerMsg[i+j], "+ %d %[^\t\n] %d", &game_and_players.all_players_info[j].playernum, namewithoutbool, &game_and_players.all_players_info[j].flag);
-                                printf("S: %s", dividedServerMsg[i+j]);
+                                printf("S: %s\n", dividedServerMsg[i+j]);
                                 // time to remove the trailing flag on the name
                                 namewithoutbool[strlen(namewithoutbool) - 2] = '\0';
                                 snprintf(game_and_players.all_players_info[j].name, NAMELEN, "%s", namewithoutbool);

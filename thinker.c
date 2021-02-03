@@ -18,6 +18,7 @@
 #include "sharedMemory.h"
 #include "printBoard.h"
 #include "performConnection.h"
+
 #define TOPLEFT 0
 #define TOPRIGHT 1
 #define BOTTOMLEFT 2

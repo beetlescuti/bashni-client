@@ -2,6 +2,7 @@
 
 #ifndef performConnection
 #define performConnection
+
 #define MSGLEN 1024
 
 int serverConnect(int socket_file_descriptor, char game_id[], int player, int * shmid_ptr);

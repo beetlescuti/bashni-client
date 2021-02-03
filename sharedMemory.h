@@ -1,12 +1,12 @@
-#include<sys/types.h>
+#include <sys/types.h>
+
+#ifndef sharedMemory
+#define sharedMemory
 
 #define NAMELEN 1024
 #define MAXPLAYERS 32
 #define MAXTOWERLEN 25
 #define BOARDSIZE 8
-
-#ifndef sharedMemory
-#define sharedMemory
 
 typedef struct {
     char game_name[NAMELEN];

@@ -18,7 +18,6 @@
 #include "sysprakclient.h"
 #include "thinker.h"
 
-
 #define GAMEIDLEN 14
 #define CONFFILENAMELEN 128
 
