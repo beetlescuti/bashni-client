@@ -36,6 +36,7 @@ int our_playernum;
 
 char tower_move[MAXMOVELEN];
 bool break_case = true;
+char** calculated_moves;
 
 
 void think(int * shmid_ptr) {
@@ -59,7 +60,7 @@ void think(int * shmid_ptr) {
 
         snprintf(move, strlen("A3:B4\n")+1, "A3:B4\n");
 
-        possiblemoves(rcv_info->game_info.board);
+        calculated_moves = possiblemoves(rcv_info->game_info.board);
 
         if ((write (fd[1], move, strlen(move))) == -1) {
             perror ("write");
@@ -87,7 +88,7 @@ void think(int * shmid_ptr) {
 
 /* calculates the possible moves of all of our pieces */
 char** possiblemoves(char board[8][8][25]) {
-    // char** all_possible_moves[] = NULL;
+
     static char all_possible_moves[MAXMOVES][MAXMOVELEN];
     int num_moves = 0;
     for (int x = 0; x < 8; x++) {
@@ -96,26 +97,48 @@ char** possiblemoves(char board[8][8][25]) {
                 if (toppiece(board, x, y) == 'W'){
                     char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
                     for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
-                        possibletowermoves(board, x,y, direction);
+                      //TODO: create new function that calculates the moves a queen can do, since it will behave differently in calc_move()
+                      //possibletowermoves(board, x,y, direction);
                     }
                 }
                 else if (toppiece(board, x, y) == 'w'){
                     char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
                     for(int direction=TOPLEFT; direction<=TOPRIGHT; direction++){
-                        snprintf(all_possible_tower_moves[num_moves], MAXMOVELEN, "%s", possibletowermoves(board, x, y, direction));
-                        num_moves++;
+
+                        possibletowermoves(board, x, y, direction);
+
+                        if (strcmp(tower_move, "") != 0) {
+                            snprintf(all_possible_tower_moves[num_moves], MAXMOVELEN, "%s", tower_move);
+                            snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
+
+                            printf("MOVE: %s\n", all_possible_moves[num_moves]);
+
+                            num_moves++;
+                        }
                     }
                 }
             }
             else if (our_playernum == 1) {
                 if (toppiece(board, x, y) == 'B'){
+                    char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
                     for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
-                        possibletowermoves(board, x,y, direction);
+                        //TODO: create new function that calculates the moves a queen can do, since it will behave differently in calc_move()
+                        //possibletowermoves(board, x,y, direction);
                     }
                 }
                 else if (toppiece(board, x, y) == 'b'){
+                    char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
                     for(int direction=BOTTOMLEFT; direction<=BOTTOMRIGHT; direction++){
                         possibletowermoves(board, x,y, direction);
+
+                        if (strcmp(tower_move, "") != 0) {
+                            snprintf(all_possible_tower_moves[num_moves], MAXMOVELEN, "%s", tower_move);
+                            snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
+
+                            printf("MOVE: %s\n", all_possible_moves[num_moves]);
+
+                            num_moves++;
+                        }
                     }
                 }
             }
@@ -127,7 +150,7 @@ char** possiblemoves(char board[8][8][25]) {
 /* calculates the possible moves of ONE pieces in ONE direction,
    this should be looped over in possiblemoves,
    returns empty string if no moves availalbe */
-char* possibletowermoves(char board[8][8][25], int x, int y, int direction){
+void possibletowermoves(char board[8][8][25], int x, int y, int direction){
     int pos_x = x;
     int pos_y = y;
 
@@ -137,9 +160,8 @@ char* possibletowermoves(char board[8][8][25], int x, int y, int direction){
         while (pos_x >= 0 && pos_y <= 7 && break_case) {
             pos_x--;
             pos_y++;
-            
+
             calc_move(board, x, y, pos_x, pos_y);
-            
         }
     }
     else if (direction == TOPRIGHT) {
@@ -149,19 +171,23 @@ char* possibletowermoves(char board[8][8][25], int x, int y, int direction){
             pos_x++;
             pos_y++;
 
-            calc_move(board, x, y, pos_x, pos_y); 
+            calc_move(board, x, y, pos_x, pos_y);
         }
     }
     else if (direction == BOTTOMLEFT) {
         while (pos_x >= 0 && pos_y >= 0 && break_case) {
             pos_x--;
-            pos_y--;       
+            pos_y--;
+
+            calc_move(board, x, y, pos_x, pos_y)
         }
     }
     else if (direction == BOTTOMRIGHT) {
         while (pos_x <= 7 && pos_y >= 0 && break_case) {
             pos_x++;
             pos_y--;
+
+            calc_move(board, x, y, pos_x, pos_y)
         }
     }
 
@@ -175,10 +201,10 @@ void calc_move(char board[8][8][25], int x, int y, int pos_x, int pos_y) {
         if (our_playernum == 0) {
             switch (toppiece(board, pos_x, pos_y)) {
                 case 'w':
-                    break_case = false; 
+                    break_case = false;
                     break;
                 case 'W':
-                    break_case = false; 
+                    break_case = false;
                     break;
                 case 'b':
                     break_case = false;
@@ -192,11 +218,9 @@ void calc_move(char board[8][8][25], int x, int y, int pos_x, int pos_y) {
                         snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
                         char post_pos[POSLEN];
                         snprintf(post_pos, POSLEN, "%s", translate_pos(pos_x, pos_y));
-
                         snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
-                        printf("MOVE: %s\n", tower_move);
                         break_case = false;
-                    } 
+                    }
                     break;
             }
         }
