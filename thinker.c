@@ -40,6 +40,7 @@ char** calculated_moves;
 
 
 void think(int * shmid_ptr) {
+    printf("were in the thinker...\n");
     // grab the actual shmid from shmid_ptr
     shmid_for_info = *shmid_ptr;
 
@@ -51,15 +52,15 @@ void think(int * shmid_ptr) {
         perror("shmat");
     }
 
-    //check if think_flag was set by the connector process
+    // check if think_flag was set by the connector process
     if (rcv_info->game_info.think_flag == 1) {
-        printf("thinker_flag == %d\n", rcv_info->game_info.think_flag);
-        //immediately set think_flag back to zero
+        // immediately set think_flag back to zero
         rcv_info->game_info.think_flag = 0;
         // sind wir hell oder dunkel?
 
         snprintf(move, strlen("A3:B4\n")+1, "A3:B4\n");
 
+        printboard(rcv_info->game_info.board);
         calculated_moves = possiblemoves(rcv_info->game_info.board);
 
         if ((write (fd[1], move, strlen(move))) == -1) {
@@ -80,10 +81,9 @@ void think(int * shmid_ptr) {
 
     // TODO: send move back through pipe
 
-
     // detach from shared memory
-    shmdt(shmid_ptr);
-    shmdt(rcv_info);
+    // shmdt(shmid_ptr);
+    // shmdt(rcv_info);
 }
 
 /* calculates the possible moves of all of our pieces */
@@ -91,6 +91,7 @@ char** possiblemoves(char board[8][8][25]) {
 
     static char all_possible_moves[MAXMOVES][MAXMOVELEN];
     int num_moves = 0;
+
     for (int x = 0; x < 8; x++) {
         for (int y = 0; y < 8; y++){
             if (our_playernum == 0) {
@@ -147,10 +148,45 @@ char** possiblemoves(char board[8][8][25]) {
     return (char**)all_possible_moves;
 }
 
-/* calculates the possible moves of ONE pieces in ONE direction,
+/* FOR NORMAL PIECES:
+   calculates the possible moves of ONE pieces in ONE direction,
    this should be looped over in possiblemoves,
    returns empty string if no moves availalbe */
 void possibletowermoves(char board[8][8][25], int x, int y, int direction){
+    int pos_x = x;
+    int pos_y = y;
+
+    if (direction == TOPLEFT) {
+        break_case = true;
+        memset(tower_move, 0, MAXMOVELEN);
+    
+        calc_move(board, x, y, pos_x, pos_y);
+        
+    }
+    else if (direction == TOPRIGHT) {
+        break_case = true;
+        memset(tower_move, 0, MAXMOVELEN);
+        
+        calc_move(board, x, y, pos_x, pos_y);
+
+    }
+    else if (direction == BOTTOMLEFT) {
+        
+        calc_move(board, x, y, pos_x, pos_y);
+    
+    }
+    else if (direction == BOTTOMRIGHT) {
+        
+        calc_move(board, x, y, pos_x, pos_y);
+        
+    }
+}
+
+/* FOR A QUEEN PIECE:
+   calculates the possible moves of ONE pieces in ONE direction,
+   this should be looped over in possiblemoves,
+   returns empty string if no moves availalbe */
+void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction){
     int pos_x = x;
     int pos_y = y;
 
@@ -179,7 +215,7 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction){
             pos_x--;
             pos_y--;
 
-            calc_move(board, x, y, pos_x, pos_y)
+            calc_move(board, x, y, pos_x, pos_y);
         }
     }
     else if (direction == BOTTOMRIGHT) {
@@ -187,30 +223,23 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction){
             pos_x++;
             pos_y--;
 
-            calc_move(board, x, y, pos_x, pos_y)
+            calc_move(board, x, y, pos_x, pos_y);
         }
     }
-
 }
 
-/* given a piece and a directions, calculates whether a move is valid */
+/* given a piece and a destination, calculates a valid move if possilble */
 void calc_move(char board[8][8][25], int x, int y, int pos_x, int pos_y) {
 
     /* catch case for edge of board */
     if (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7) {
         if (our_playernum == 0) {
             switch (toppiece(board, pos_x, pos_y)) {
-                case 'w':
-                    break_case = false;
-                    break;
-                case 'W':
-                    break_case = false;
-                    break;
                 case 'b':
-                    break_case = false;
+                    // check if field behind is open
+                    if (toppiece(board, pos_x, pos_y))
                     break;
                 case 'B':
-                    break_case = false;
                     break;
                 case ' ':
                     if (strcmp(tower_move, "") == 0) {
@@ -219,13 +248,14 @@ void calc_move(char board[8][8][25], int x, int y, int pos_x, int pos_y) {
                         char post_pos[POSLEN];
                         snprintf(post_pos, POSLEN, "%s", translate_pos(pos_x, pos_y));
                         snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
-                        break_case = false;
                     }
+                    break;
+                default:
                     break;
             }
         }
         else if (our_playernum == 1) {
-
+            // TODO: translate move logic for black
         }
     }
 

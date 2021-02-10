@@ -69,6 +69,9 @@ int main(int argc, char*argv[]) {
 
     /* Create a shared memory to store the shmid of our other shared memory */
     int shmid = shmget(IPC_PRIVATE, sizeof(int), IPC_CREAT | 0644);
+    printf("----------- SHMID [1] -----------\n");
+    printf("            %d\n", shmid);
+    printf("--------------------------------\n");
 
 
 

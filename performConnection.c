@@ -28,6 +28,7 @@ int packets;
 int bytes_received;
 char** dividedServerMsg;
 char* tokenArray[TOKENLEN];
+int boardsreceived = 0;
 
 // The variables below are used to store sscanf matches
 char server_version[MATCHLEN];
@@ -54,8 +55,24 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
     game_and_players.game_info.connector_id = getpid();
     game_and_players.game_info.thinker_id = getppid();
 
-    /* fill game board with 0's */
-    for (size_t k = 0; k <= 7; k++) memset(game_and_players.game_info.board[k], 0, sizeof(int[8]));
+    /* set file descriptor for thinker pipe */
+    // Wait for message from server or from thinker
+    fd_set readfds;
+
+    // clear the socket set
+    FD_ZERO(&readfds);
+
+    // add filedescriptor as master socket to set
+    FD_SET(socket_file_descriptor, &readfds);
+    int max_sd = socket_file_descriptor;
+
+    // add thinker filedescriptor as child to set
+    FD_SET(fd[0], &readfds);
+
+    // check for highest descriptor number
+    if (fd[0] > max_sd){
+        max_sd = fd[0];
+    }
 
     /* Enter an infinite while loop that calls receiveServerMsg() and then filters the
        result into the correct switch/case */
@@ -167,6 +184,9 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                                 perror("shmat");
                             }
 
+                            printf("----------- SHMID [2] -----------\n");
+                            printf("            %d\n", shmid_for_info);
+                            printf("---------------------------------\n");
                         }
 
                         else if (sscanf(current, "+ ENDPLA%s", server_placeholder) == 1){
@@ -179,20 +199,17 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
 
                         else if (sscanf(current, "+ PIECESLIST %d", &server_total_pieces) == 1){
                             game_and_players.game_info.total_pieces = server_total_pieces;
+                            /* fill game board with 0's */
+                            if (boardsreceived != 0) {
+                                for (int x = 0; x < 8; x++) {
+                                    for (int y = 0; y < 8; y++){
+                                        memset(game_and_players.game_info.board[x][y], 0, MAXTOWERLEN);
+                                    }
+                                }
+                            }
                         }
 
                         else if (sscanf(current, "+ %[^@]@%c%d", piece, &horizontal, &vertical) == 3){
-                            // printf("%s, %c, %d", piece, horizontal, vertical);
-
-                            // get piece stack size from server
-                            //int piece_size = strlen(piece);
-
-                            // make int negative if piece is black
-                           // if (piece[piece_size-1] == 'b' || piece[piece_size-1] == 'B'){
-                             //   piece_size =  piece_size * (-1);
-                          //  }
-
-                            // put it in the right position
                             switch (horizontal) {
                                 case 'A':
                                     snprintf(game_and_players.game_info.board[0][vertical-1], MAXTOWERLEN, "%s" , piece);
@@ -239,80 +256,63 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                         else if (sscanf(current, "+ OKTHI%s", server_placeholder) == 1){
                             memset(server_placeholder, 0, MATCHLEN);
 
-                            // TODO: move this code further along as the protokoll continues...
+                            // write new gameboard into shared memory
+                            shm_info->game_info = game_and_players.game_info; 
 
-                            // add our local structs to the shared memory segment
-                            shm_info->game_info = game_and_players.game_info;
-                            for (size_t n = 0; n <= game_and_players.game_info.total_players - 1; n++) {
-                                shm_info->all_players_info[n] = game_and_players.all_players_info[n];
+                            if (boardsreceived == 0) {
+                                // add our local structs to the shared memory segment
+                                for (size_t n = 0; n <= game_and_players.game_info.total_players - 1; n++) {
+                                    shm_info->all_players_info[n] = game_and_players.all_players_info[n];
+                                }
                             }
+                            // TEMPORARY!!!
+                            // increment boardsreceived after every move so game can be manually stopped after a num of moves
+                            boardsreceived++;
 
                             // set think-flag in shared memory
-                            
-                            //TODO find out why this line is causing the program to exit
                             shm_info->game_info.think_flag = 1;
-
-                            // print the summary from the child's perspective
-                            printf("---------------------------- CHILD ----------------------------\n");
-                            printf("game name: %s\nour player: %d\ntotal players: %d\nmaximum moves: %d\ntotal pieces: %d\nconnector id: %d\nthinker id: %d\n", shm_info->game_info.game_name, shm_info->game_info.our_playernum, shm_info->game_info.total_players, shm_info->game_info.max_moves, shm_info->game_info.total_pieces, shm_info->game_info.connector_id, shm_info->game_info.thinker_id);
-                            printf("@player num: %d\n@player name: %s\n@player flag: %d\n", shm_info->all_players_info[0].playernum, shm_info->all_players_info[0].name, shm_info->all_players_info[0].flag);
-                            printf("@player num: %d\n@player name: %s\n@player flag: %d\n", shm_info->all_players_info[1].playernum, shm_info->all_players_info[1].name, shm_info->all_players_info[1].flag);
-
-                            printboard(shm_info->game_info.board);
-
-                            // detach from shared memory
-                            shmdt(shmid_ptr);
-                            shmdt(shm_info);
 
                             // send signal to parent that game info is ready
                             kill(game_and_players.game_info.thinker_id, SIGUSR1);
 
                             // read next move
-                            char rcv_move[MSGLEN];
+                            char rcv_move[MSGLEN];                            
 
-                             // Wait for message from server or from thinker
-                             fd_set readfds;
-
-                             // clear the socket set
-                             FD_ZERO(&readfds);
-
-                             // add filedescriptor as master socket to set
-                             FD_SET(socket_file_descriptor, &readfds);
-                             int max_sd = socket_file_descriptor;
-
-                             // add thinker filedescriptor as child to set
-                             FD_SET(fd[0], &readfds);
-
-                             // check for highest descriptor number
-                             if (fd[0] > max_sd){
-                                 max_sd = fd[0];
-                             }
-
-                             // wait for activity in one of the two sockets
+                            // wait for activity in one of the two sockets
                             int activity;
                             activity = select(max_sd+1, &readfds, NULL, NULL, NULL);
 
                             if (activity == -1)
                                 perror("select()");
-                            else if (activity){
-                                if (FD_ISSET(fd[0] , &readfds)){
+                            else if (activity) {
+                                if (FD_ISSET(fd[0] , &readfds)) {
                                     printf("Data is available now.\n");
                                     read(fd[0],  rcv_move, MSGLEN);
-                                    printf("received move: %s \n", rcv_move);
-                                    snprintf(client_msg, MSGLEN, "%s", rcv_move);
-                                    sendClientMsg(socket_file_descriptor);}
-                                    // TODO send move to server
+                                    printf("received move: %s", rcv_move);
+                                    snprintf(client_msg, MSGLEN, "PLAY %s", rcv_move);
+                                    sendClientMsg(socket_file_descriptor);
+                                    }
                                 else if(FD_ISSET(socket_file_descriptor , &readfds)){
                                 printf("Data from server.\n");
                                 receiveServerMsg(socket_file_descriptor);
                                 printf("Error: %s\n", server_msg);
-                             }}
+                                }
+                            }
 
 
-                            printf("%d \n", activity);
+                            // printf("%d \n", activity);
+
+                            // TEMPORARY!!
+                            // This should eventually be moved to the GAME OVER Protokoll
+                            if (boardsreceived == 3) {
+                                // detach from shared memory
+                                shmdt(shmid_ptr);
+                                shmdt(shm_info);
+                                exit(EXIT_SUCCESS);
+                            }
 
                             // [arbitrary] exit so that shared mem  // TODO send move to serverory is deleted properly
-                            exit(EXIT_SUCCESS);
+                            // exit(EXIT_SUCCESS);
 
                         }
 
@@ -322,6 +322,10 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             sendClientMsg(socket_file_descriptor);
                         }
 
+                        else if (sscanf(current, "+ MOVEO%s", server_placeholder) == 1) {
+
+                        }
+                        
                         else {
                             perror("sscanf");
                             fprintf(stderr, "could not parse\n");
@@ -331,6 +335,8 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                 }
                 break;
             case '-':
+                shmdt(shmid_ptr);
+                shmdt(shm_info);
                 // For debugging
                 // printf("%c\n", server_msg[0]);
                 printf("Error: %s\n", server_msg);
