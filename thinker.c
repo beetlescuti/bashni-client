@@ -225,7 +225,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
             pos_x--;
             pos_y++;
 
-            calc_move(board, x, y, pos_x, pos_y);
+            //calc_move(board, x, y, pos_x, pos_y);
         }
     }
     else if (direction == TOPRIGHT) {
@@ -235,7 +235,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
             pos_x++;
             pos_y++;
 
-            calc_move(board, x, y, pos_x, pos_y);
+            //calc_move(board, x, y, pos_x, pos_y);
         }
     }
     else if (direction == BOTTOMLEFT) {
@@ -243,7 +243,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
             pos_x--;
             pos_y--;
 
-            calc_move(board, x, y, pos_x, pos_y);
+            //calc_move(board, x, y, pos_x, pos_y);
         }
     }
     else if (direction == BOTTOMRIGHT) {
@@ -251,7 +251,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
             pos_x++;
             pos_y--;
 
-            calc_move(board, x, y, pos_x, pos_y);
+            //calc_move(board, x, y, pos_x, pos_y);
         }
     }
 }
