@@ -256,13 +256,6 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
     }
 }
 
-/* given a piece and a destination, calculates a valid move if possilble */
-void calc_move(char board[8][8][25], int x, int y, int pos_x, int pos_y) {
-
-    
-
-}
-
 /* returns the value of the top piece from board coordinates */
 char toppiece(char board[8][8][25], int x, int y){
     char piece = ' ';
