@@ -157,27 +157,34 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
     int pos_y = y;
 
     memset(tower_move, 0, MAXMOVELEN);
+
+    int* newpoint;
+    newpoint = moveindirection(direction, pos_x, pos_y);
+    pos_x = newpoint[0];
+    pos_y = newpoint[1];
+
+
     
-    switch (direction) {
-        case TOPLEFT:
-            pos_x--;
-            pos_y++;
-            break;
-        case TOPRIGHT:
-            pos_x++;
-            pos_y++;
-            break;
-        case BOTTOMLEFT:
-            pos_x--;
-            pos_y--;
-            break;
-        case BOTTOMRIGHT:
-            pos_x++;
-            pos_y--;
-            break;
-        default:
-            break;
-    }
+//    switch (direction) {
+//        case TOPLEFT:
+//            pos_x--;
+//            pos_y++;
+//            break;
+//        case TOPRIGHT:
+//            pos_x++;
+//            pos_y++;
+//            break;
+//        case BOTTOMLEFT:
+//            pos_x--;
+//            pos_y--;
+//            break;
+//        case BOTTOMRIGHT:
+//            pos_x++;
+//            pos_y--;
+//            break;
+//        default:
+//            break;
+//    }
 
     /* catch case for edge of board */
     if (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7) {
@@ -305,4 +312,35 @@ char* translate_pos(int x, int y) {
     position[1] = y+1 + '0';
 
     return position;
+}
+
+
+int* moveindirection(int direction, int x, int y) {
+       int *newpoint;
+       newpoint = {};
+
+        switch (direction) {
+            case TOPLEFT:
+                x--;
+                y++;
+                break;
+            case TOPRIGHT:
+                x++;
+                y++;
+                break;
+            case BOTTOMLEFT:
+                x--;
+                y--;
+                break;
+            case BOTTOMRIGHT:
+                x++;
+                y--;
+                break;
+            default:
+                break;}
+
+        newpoint[0] = x;
+        newpoint[1] = y;
+
+        return newpoint;
 }
