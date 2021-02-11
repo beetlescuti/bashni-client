@@ -226,7 +226,7 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                         else {
                             for(int direction=TOPLEFT; direction<=TOPRIGHT; direction++){
                                 
-                                possibletowermoves(board, pos1_x, pos1_y, direction);
+                                // possibletowermoves(board, pos1_x, pos1_y, direction);
                             }
                         }
                         
