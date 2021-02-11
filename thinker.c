@@ -200,12 +200,36 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                     pos1_y = nextpoint[1];
 
                     if (toppiece(board, pos1_x, pos1_y) == ' ') {
-                        // rekursiv aufruf
-                        char pre_pos[POSLEN];
-                        snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
-                        char post_pos[POSLEN];
-                        snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
-                        snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+                        if (strcmp(tower_move, "") == 0) {
+                            char pre_pos[POSLEN];
+                            snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
+                            char post_pos[POSLEN];
+                            snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
+                            snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+                        }
+                        else {
+                            char temp_pos[POSLEN];
+                            snprintf(temp_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
+
+                        }
+                        
+
+                        // memcpy(dest, src, sizeof (mytype) * rows * columns);
+                        int temp_board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
+                        memcpy(temp_board, board, sizeof(MAXTOWERLEN) * BOARDSIZE * BOARDSIZE);
+
+                        // RESUME HERE
+
+                        if (pos1_y == 7) {
+                            // TODO: you're a queen now! do a queen function...
+                        }
+                        else {
+                            for(int direction=TOPLEFT; direction<=TOPRIGHT; direction++){
+                                
+                                possibletowermoves(board, pos1_x, pos1_y, direction);
+                            }
+                        }
+                        
                     }
                     flag_all_possible_moves[num_moves] = BETTERMOVE;
 
