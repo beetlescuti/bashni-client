@@ -90,26 +90,28 @@ void think(int * shmid_ptr) {
 char** possiblemoves(char board[8][8][25]) {
 
     static char all_possible_moves[MAXMOVES][MAXMOVELEN];
-    int num_moves = 0;
+    static int flag_all_possible_moves[MAXMOVES];
+
+    static int num_moves = 0;
 
     for (int x = 0; x < 8; x++) {
         for (int y = 0; y < 8; y++){
             if (our_playernum == 0) {
                 if (toppiece(board, x, y) == 'W'){
-                    char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
+                    // char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
                     for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
                       //TODO: create new function that calculates the moves a queen can do, since it will behave differently in calc_move()
                       //possibletowermoves(board, x,y, direction);
                     }
                 }
                 else if (toppiece(board, x, y) == 'w'){
-                    char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
+                    // char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
                     for(int direction=TOPLEFT; direction<=TOPRIGHT; direction++){
 
                         possibletowermoves(board, x, y, direction);
 
                         if (strcmp(tower_move, "") != 0) {
-                            snprintf(all_possible_tower_moves[num_moves], MAXMOVELEN, "%s", tower_move);
+                            // snprintf(all_possible_tower_moves[num_moves], MAXMOVELEN, "%s", tower_move);
                             snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
 
                             printf("MOVE: %s\n", all_possible_moves[num_moves]);
@@ -121,19 +123,19 @@ char** possiblemoves(char board[8][8][25]) {
             }
             else if (our_playernum == 1) {
                 if (toppiece(board, x, y) == 'B'){
-                    char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
+                    // char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
                     for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
                         //TODO: create new function that calculates the moves a queen can do, since it will behave differently in calc_move()
                         //possibletowermoves(board, x,y, direction);
                     }
                 }
                 else if (toppiece(board, x, y) == 'b'){
-                    char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
+                    // char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
                     for(int direction=BOTTOMLEFT; direction<=BOTTOMRIGHT; direction++){
                         possibletowermoves(board, x,y, direction);
 
                         if (strcmp(tower_move, "") != 0) {
-                            snprintf(all_possible_tower_moves[num_moves], MAXMOVELEN, "%s", tower_move);
+                            // snprintf(all_possible_tower_moves[num_moves], MAXMOVELEN, "%s", tower_move);
                             snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
 
                             printf("MOVE: %s\n", all_possible_moves[num_moves]);
@@ -163,36 +165,33 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
     pos_x = newpoint[0];
     pos_y = newpoint[1];
 
-
-    
-//    switch (direction) {
-//        case TOPLEFT:
-//            pos_x--;
-//            pos_y++;
-//            break;
-//        case TOPRIGHT:
-//            pos_x++;
-//            pos_y++;
-//            break;
-//        case BOTTOMLEFT:
-//            pos_x--;
-//            pos_y--;
-//            break;
-//        case BOTTOMRIGHT:
-//            pos_x++;
-//            pos_y--;
-//            break;
-//        default:
-//            break;
-//    }
-
     /* catch case for edge of board */
     if (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7) {
         if (our_playernum == 0) {
+            int pos1_x;
+            int pos1_y;
+            int* nextpoint;
+
+
             switch (toppiece(board, pos_x, pos_y)) {
                 case 'b':
                     // check if field behind is open
                     // if (toppiece(board, pos_x, pos_y))
+                    // int pos1_x = pos_x;
+                    // int pos1_y = pos_y;
+                    nextpoint = moveindirection(direction, pos_x, pos_y);
+                    pos1_x = nextpoint[0];
+                    pos1_y = nextpoint[1];
+
+                    if (toppiece(board, pos1_x, pos1_y) == ' ') {
+                        // rekursiv aufruf
+                        char pre_pos[POSLEN];
+                        snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
+                        char post_pos[POSLEN];
+                        snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
+                        snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+                    }
+
                     break;
                 case 'B':
                     break;
@@ -203,6 +202,8 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                         char post_pos[POSLEN];
                         snprintf(post_pos, POSLEN, "%s", translate_pos(pos_x, pos_y));
                         snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+
+                        flag_all_possible_moves[nummoves] = 0;
                     }
                     break;
                 default:
@@ -340,6 +341,6 @@ int* moveindirection(int direction, int x, int y) {
             default:
                 break;
         }
-        
+
         return newpoint;
 }
