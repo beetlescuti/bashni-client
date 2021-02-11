@@ -30,7 +30,7 @@
 #define POSLEN 3
 
 int shmid_for_info;
-char move[MSGLEN];
+char move[MSGLEN-6];
 int n;
 int our_playernum;
 

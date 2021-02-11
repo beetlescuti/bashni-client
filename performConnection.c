@@ -276,7 +276,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             kill(game_and_players.game_info.thinker_id, SIGUSR1);
 
                             // read next move
-                            char rcv_move[MSGLEN];                            
+                            char rcv_move[MSGLEN-6];
 
                             // wait for activity in one of the two sockets
                             int activity;
