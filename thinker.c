@@ -24,6 +24,9 @@
 #define BOTTOMLEFT 2
 #define BOTTOMRIGHT 3
 
+#define BADMOVE 1
+#define BETTERMOVE 2
+
 // 5 for first move, 11 max partial moves with 3 chars each, plus nullbyte
 #define MAXMOVELEN 5 + 11*3 + 1
 #define MAXMOVES 500
@@ -38,6 +41,9 @@ char tower_move[MAXMOVELEN];
 bool break_case = true;
 char** calculated_moves;
 
+char all_possible_moves[MAXMOVES][MAXMOVELEN];
+int flag_all_possible_moves[MAXMOVES];
+int num_moves = 0;
 
 void think(int * shmid_ptr) {
     printf("were in the thinker...\n");
@@ -58,10 +64,13 @@ void think(int * shmid_ptr) {
         rcv_info->game_info.think_flag = 0;
         // sind wir hell oder dunkel?
 
-        snprintf(move, strlen("A3:B4\n")+1, "A3:B4\n");
+        // snprintf(move, strlen("A3:B4\n")+1, "A3:B4\n");
 
         printboard(rcv_info->game_info.board);
         calculated_moves = possiblemoves(rcv_info->game_info.board);
+        int selected_move = bestmove();
+
+        snprintf(move, strlen(all_possible_moves[selected_move]) + 2, "%s\n", all_possible_moves[selected_move]);
 
         if ((write (fd[1], move, strlen(move))) == -1) {
             perror ("write");
@@ -86,14 +95,21 @@ void think(int * shmid_ptr) {
     // shmdt(rcv_info);
 }
 
+/* takes an array of moves and selects the best one */
+int bestmove() {
+    int best_index = -1;
+    for (int i = 0; i < MAXMOVES; i++) {
+        int best_rating = 0;
+        if (flag_all_possible_moves[i] > best_rating) {
+            best_rating = flag_all_possible_moves[i];
+            best_index = i;
+        }
+    }
+    return best_index;
+}
+
 /* calculates the possible moves of all of our pieces */
 char** possiblemoves(char board[8][8][25]) {
-
-    static char all_possible_moves[MAXMOVES][MAXMOVELEN];
-    static int flag_all_possible_moves[MAXMOVES];
-
-    static int num_moves = 0;
-
     for (int x = 0; x < 8; x++) {
         for (int y = 0; y < 8; y++){
             if (our_playernum == 0) {
@@ -114,7 +130,7 @@ char** possiblemoves(char board[8][8][25]) {
                             // snprintf(all_possible_tower_moves[num_moves], MAXMOVELEN, "%s", tower_move);
                             snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
 
-                            printf("MOVE: %s\n", all_possible_moves[num_moves]);
+                            printf("MOVE: %s %d\n", all_possible_moves[num_moves], flag_all_possible_moves[num_moves]);
 
                             num_moves++;
                         }
@@ -138,7 +154,7 @@ char** possiblemoves(char board[8][8][25]) {
                             // snprintf(all_possible_tower_moves[num_moves], MAXMOVELEN, "%s", tower_move);
                             snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
 
-                            printf("MOVE: %s\n", all_possible_moves[num_moves]);
+                            printf("MOVE: %s %d\n", all_possible_moves[num_moves], flag_all_possible_moves[num_moves]);
 
                             num_moves++;
                         }
@@ -191,6 +207,7 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                         snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
                         snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
                     }
+                    flag_all_possible_moves[num_moves] = BETTERMOVE;
 
                     break;
                 case 'B':
@@ -203,7 +220,7 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                         snprintf(post_pos, POSLEN, "%s", translate_pos(pos_x, pos_y));
                         snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
 
-                        flag_all_possible_moves[nummoves] = 0;
+                        flag_all_possible_moves[num_moves] = BADMOVE;
                     }
                     break;
                 default:
