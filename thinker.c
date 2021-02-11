@@ -316,31 +316,30 @@ char* translate_pos(int x, int y) {
 
 
 int* moveindirection(int direction, int x, int y) {
-       int *newpoint;
-       newpoint = {};
+       static int newpoint[2];
+       newpoint[0] = x;
+       newpoint[1] = y;
 
         switch (direction) {
             case TOPLEFT:
-                x--;
-                y++;
+                newpoint[0]--;
+                newpoint[1]++;
                 break;
             case TOPRIGHT:
-                x++;
-                y++;
+                newpoint[0]++;
+                newpoint[1]++;
                 break;
             case BOTTOMLEFT:
-                x--;
-                y--;
+                newpoint[0]--;
+                newpoint[1]--;
                 break;
             case BOTTOMRIGHT:
-                x++;
-                y--;
+                newpoint[0]++;
+                newpoint[1]--;
                 break;
             default:
-                break;}
-
-        newpoint[0] = x;
-        newpoint[1] = y;
-
+                break;
+        }
+        
         return newpoint;
 }
