@@ -203,11 +203,9 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                         else if (sscanf(current, "+ PIECESLIST %d", &server_total_pieces) == 1){
                             game_and_players.game_info.total_pieces = server_total_pieces;
                             /* fill game board with 0's */
-                            if (boardsreceived != 0) {
-                                for (int x = 0; x < 8; x++) {
-                                    for (int y = 0; y < 8; y++){
-                                        memset(game_and_players.game_info.board[x][y], 0, MAXTOWERLEN);
-                                    }
+                            for (int x = 0; x < 8; x++) {
+                                for (int y = 0; y < 8; y++){
+                                    memset(game_and_players.game_info.board[x][y], 0, MAXTOWERLEN);
                                 }
                             }
                         }
@@ -268,9 +266,6 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                                     shm_info->all_players_info[n] = game_and_players.all_players_info[n];
                                 }
                             }
-                            // TEMPORARY!!!
-                            // increment boardsreceived after every move so game can be manually stopped after a num of moves
-                            boardsreceived++;
 
                             // set think-flag in shared memory
                             shm_info->game_info.think_flag = 1;
@@ -301,22 +296,6 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                                 printf("Error: %s\n", server_msg);
                                 }
                             }
-
-
-                            // printf("%d \n", activity);
-
-                            // TEMPORARY!!
-                            // This should eventually be moved to the GAME OVER Protokoll
-                            if (boardsreceived == 30) {
-                                // detach from shared memory
-                                shmdt(shmid_ptr);
-                                shmdt(shm_info);
-                                exit(EXIT_SUCCESS);
-                            }
-
-                            // [arbitrary] exit so that shared mem  // TODO send move to serverory is deleted properly
-                            // exit(EXIT_SUCCESS);
-
                         }
 
                         else if (sscanf(current, "+ WA%s", server_placeholder) == 1){
@@ -335,12 +314,22 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             game_and_players.game_info.gameover = 1;
                         }
 
-                        else if (sscanf(current, "+ PLAYER%dWON %s", &player_id, winner) == 1) {
+                        else if (sscanf(current, "+ PLAYER0WON %s", winner) == 1) {
+                            player_id = 0;
                             if (strcmp(winner, "Yes") == 0) {
                                 game_and_players.game_info.winner = player_id;
                             }
                             player_id = -1;
-                            memset(winner, 0, 4);
+                            memset(winner, 0, MATCHLEN);
+                        }
+
+                        else if (sscanf(current, "+ PLAYER1WON %s", winner) == 1) {
+                            player_id = 1;
+                            if (strcmp(winner, "Yes") == 0) {
+                                game_and_players.game_info.winner = player_id;
+                            }
+                            player_id = -1;
+                            memset(winner, 0, MATCHLEN);
                         }
 
                         else if (sscanf(current, "+ QUI%s", server_placeholder) == 1) {

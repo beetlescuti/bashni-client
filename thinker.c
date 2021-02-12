@@ -239,7 +239,7 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                                 snprintf(already_moved, MAXMOVELEN, "%s", tower_move);
                                 
                                 // concat previous partial moves with new capturing move
-                                snprintf(tower_move, MAXMOVELEN, "%s:%s", already_moved, temp_pos);
+                                snprintf(tower_move, MAXMOVELEN - (strlen(already_moved) + 1), "%s:%s", already_moved, temp_pos);
 
                                 // increment our move flag to show that this move is better
                                 flag_all_possible_moves[num_moves]++;
@@ -326,7 +326,7 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                                 //memset(tower_move, 0, MAXMOVELEN);
                                 
                                 // concat previous partial moves with new capturing move
-                                snprintf(tower_move, MAXMOVELEN, "%s:%s", already_moved, temp_pos);
+                                snprintf(tower_move, MAXMOVELEN - (strlen(already_moved) + 1), "%s:%s", already_moved, temp_pos);
 
                                 // increment our move flag to show that this move is better
                                 flag_all_possible_moves[num_moves]++;
@@ -420,6 +420,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
 
     // while not edge case and next square is blank
     while (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7 && break_hit_our_piece == 0) {
+        printf("LOOKING AT: %s\n", translate_pos(pos_x, pos_y));
         if (our_playernum == 0) {
             int pos1_x;
             int pos1_y;
@@ -455,7 +456,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                                 snprintf(already_moved, MAXMOVELEN, "%s", tower_move);
                                 
                                 // concat previous partial moves with new capturing move
-                                snprintf(tower_move, MAXMOVELEN, "%s:%s", already_moved, temp_pos);
+                                snprintf(tower_move, MAXMOVELEN - (strlen(already_moved) + 1), "%s:%s", already_moved, temp_pos);
 
                                 // increment our move flag to show that this move is better
                                 flag_all_possible_moves[num_moves]++;
@@ -517,12 +518,9 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                                 // write all previous partial moves into string
                                 char already_moved[MAXMOVELEN];
                                 snprintf(already_moved, MAXMOVELEN, "%s", tower_move);
-
-                                // delete old partial moves
-                                //memset(tower_move, 0, MAXMOVELEN);
                                 
                                 // concat previous partial moves with new capturing move
-                                snprintf(tower_move, MAXMOVELEN, "%s:%s", already_moved, temp_pos);
+                                snprintf(tower_move, MAXMOVELEN - (strlen(already_moved) + 1), "%s:%s", already_moved, temp_pos);
 
                                 // increment our move flag to show that this move is better
                                 flag_all_possible_moves[num_moves]++;
