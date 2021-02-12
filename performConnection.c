@@ -304,7 +304,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
 
                             // TEMPORARY!!
                             // This should eventually be moved to the GAME OVER Protokoll
-                            if (boardsreceived == 5) {
+                            if (boardsreceived == 30) {
                                 // detach from shared memory
                                 shmdt(shmid_ptr);
                                 shmdt(shm_info);
