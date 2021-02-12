@@ -36,6 +36,7 @@ int shmid_for_info;
 char move[MSGLEN-6];
 int n;
 int our_playernum;
+int first_think = 0;
 
 char tower_move[MAXMOVELEN];
 bool break_case = true;
@@ -45,18 +46,23 @@ char all_possible_moves[MAXMOVES][MAXMOVELEN];
 int flag_all_possible_moves[MAXMOVES];
 int num_moves = 0;
 
+all_info * rcv_info = NULL;
+
 void think(int * shmid_ptr) {
     printf("were in the thinker...\n");
     // grab the actual shmid from shmid_ptr
     shmid_for_info = *shmid_ptr;
 
     // attach to shared memory
-    all_info * rcv_info;
-    rcv_info = (all_info*) shmat(shmid_for_info, NULL, 0);
-    if (rcv_info == (void *) -1) {
-    printf("Error attaching shared memory.\n");
+    if (first_think == 0) {
+        rcv_info = (all_info*) shmat(shmid_for_info, NULL, 0);
+        if (rcv_info == (void *) -1) {
+            printf("Error attaching shared memory.\n");
         perror("shmat");
+        }
+        first_think = 1;
     }
+    
 
     // set our player number
     our_playernum = rcv_info->game_info.our_playernum;
@@ -128,7 +134,7 @@ char** possiblemoves(char board[8][8][25]) {
                 }
                 else if (toppiece(board, x, y) == 'w'){
                     // char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
-                    for(int direction=TOPLEFT; direction<=TOPRIGHT; direction++){
+                    for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
                         
                         memset(tower_move, 0, MAXMOVELEN);
                         possibletowermoves(board, x, y, direction);
@@ -154,7 +160,7 @@ char** possiblemoves(char board[8][8][25]) {
                 }
                 else if (toppiece(board, x, y) == 'b'){
                     // char all_possible_tower_moves[MAXMOVES][MAXMOVELEN];
-                    for(int direction=BOTTOMLEFT; direction<=BOTTOMRIGHT; direction++){
+                    for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
                         possibletowermoves(board, x,y, direction);
 
                         if (strcmp(tower_move, "") != 0) {
@@ -199,9 +205,7 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                 case 'b':
                     nextpoint = moveindirection(direction, pos_x, pos_y);
                     pos1_x = nextpoint[0];
-                    printf("pos1_x: %d\n", pos1_x);
                     pos1_y = nextpoint[1];
-                    printf("pos1_y: %d\n", pos1_y);
 
                     /* catch case for edge of board */
                     if (pos1_x >= 0 && pos1_x <= 7 && pos1_y >= 0 && pos1_y <= 7) {
@@ -262,7 +266,7 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                                 printboard(temp_board);
 
                                 // check for further capture moves, recursion!
-                                for(int direction=TOPLEFT; direction<=TOPRIGHT; direction++){
+                                for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
                                     possibletowermoves(temp_board, pos1_x, pos1_y, direction);
                                 }
                             }
@@ -275,15 +279,18 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                 case 'B':
                     break;
                 case ' ':
-                    if (strcmp(tower_move, "") == 0) {
-                        char pre_pos[POSLEN];
-                        snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
-                        char post_pos[POSLEN];
-                        snprintf(post_pos, POSLEN, "%s", translate_pos(pos_x, pos_y));
-                        snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+                    if (direction == TOPLEFT || direction == TOPRIGHT) {
+                        if (strcmp(tower_move, "") == 0) {
+                            char pre_pos[POSLEN];
+                            snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
+                            char post_pos[POSLEN];
+                            snprintf(post_pos, POSLEN, "%s", translate_pos(pos_x, pos_y));
+                            snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
 
-                        flag_all_possible_moves[num_moves] = BADMOVE;
+                            flag_all_possible_moves[num_moves] = BADMOVE;
+                        }
                     }
+                    
                     break;
                 default:
                     break;
