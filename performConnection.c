@@ -209,31 +209,31 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             }
                         }
 
-                        else if (sscanf(current, "+ %[^@]@%c%d", piece, &horizontal, &vertical) == 3){
+                        else if (sscanf(current, "+ %c@%c%d", piece, &horizontal, &vertical) == 3){
                             switch (horizontal) {
                                 case 'A':
-                                    snprintf(game_and_players.game_info.board[0][vertical-1], MAXTOWERLEN, "%s" , piece);
+                                    writetower(game_and_players.game_info.board, 0, vertical-1, piece);
                                     break;
                                 case 'B':
-                                    snprintf(game_and_players.game_info.board[1][vertical-1], MAXTOWERLEN, "%s" , piece);
+                                    writetower(game_and_players.game_info.board, 1, vertical-1, piece);
                                     break;
                                 case 'C':
-                                    snprintf(game_and_players.game_info.board[2][vertical-1], MAXTOWERLEN, "%s" , piece);
+                                    writetower(game_and_players.game_info.board, 2, vertical-1, piece);
                                     break;
                                 case 'D':
-                                    snprintf(game_and_players.game_info.board[3][vertical-1], MAXTOWERLEN, "%s" , piece);
+                                    writetower(game_and_players.game_info.board, 3, vertical-1, piece);
                                     break;
                                 case 'E':
-                                    snprintf(game_and_players.game_info.board[4][vertical-1], MAXTOWERLEN, "%s" , piece);
+                                    writetower(game_and_players.game_info.board, 4, vertical-1, piece);
                                     break;
                                 case 'F':
-                                    snprintf(game_and_players.game_info.board[5][vertical-1], MAXTOWERLEN, "%s" , piece);
+                                    writetower(game_and_players.game_info.board, 5, vertical-1, piece);
                                     break;
                                 case 'G':
-                                    snprintf(game_and_players.game_info.board[6][vertical-1], MAXTOWERLEN, "%s" , piece);
+                                    writetower(game_and_players.game_info.board, 6, vertical-1, piece);
                                     break;
                                 case 'H':
-                                    snprintf(game_and_players.game_info.board[7][vertical-1], MAXTOWERLEN, "%s" , piece);
+                                    writetower(game_and_players.game_info.board, 7, vertical-1, piece);
                                     break;
                                 default:
                                     printf("Not a valid position");
@@ -402,4 +402,13 @@ void sendClientMsg(int socket_file_descriptor) {
 
     // clear the variables for use in the next send
     memset(client_msg, 0, MSGLEN);
+}
+
+/* writes a tower string at a position given new piece info from server */
+void writetower(char board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN], int x, int y, char *new_piece) {
+    // combine strings and write to board
+    char final_twr[MAXTOWERLEN];
+    snprintf(final_twr, MAXTOWERLEN, "%s%s", board[x][y], new_piece);
+    memset(board[x][y], 0, MAXTOWERLEN);
+    snprintf(board[x][y], MAXTOWERLEN, "%s", final_twr);
 }
