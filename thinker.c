@@ -58,6 +58,9 @@ void think(int * shmid_ptr) {
         perror("shmat");
     }
 
+    // set our player number
+    our_playernum = rcv_info->game_info.our_playernum;
+
     // check if think_flag was set by the connector process
     if (rcv_info->game_info.think_flag == 1) {
         // immediately set think_flag back to zero
@@ -69,26 +72,27 @@ void think(int * shmid_ptr) {
         printboard(rcv_info->game_info.board);
         calculated_moves = possiblemoves(rcv_info->game_info.board);
         int selected_move = bestmove();
+        printf("SELECTED MOVE: %d\n", selected_move);
 
         snprintf(move, strlen(all_possible_moves[selected_move]) + 2, "%s\n", all_possible_moves[selected_move]);
 
-        if ((write (fd[1], move, strlen(move))) == -1) {
+        //reset all_possible_moves, all_possible_tower_moves, flag_all_possible_moves
+        for (size_t i = 0; i < MAXMOVES; i++) {
+          memset(all_possible_moves[i], 0, MAXMOVELEN);
+          flag_all_possible_moves[i] = 0;
+          //memset(all_possible_tower_moves[i], 0, MAXMOVELEN);
+        }
+
+        //write move into pipe
+        if ((write (fd[1], move, strlen(move) + 1)) == -1) {
             perror ("write");
             exit (EXIT_FAILURE);
         }
-
-
     }
+
     else {
         printf("error: thinker_flag not set.\n");
     }
-
-    // set our player number
-    our_playernum = rcv_info->game_info.our_playernum;
-
-    printf("thinking...\n");
-
-    // TODO: send move back through pipe
 
     // detach from shared memory
     // shmdt(shmid_ptr);
@@ -98,8 +102,8 @@ void think(int * shmid_ptr) {
 /* takes an array of moves and selects the best one */
 int bestmove() {
     int best_index = -1;
+    int best_rating = 0;
     for (int i = 0; i < MAXMOVES; i++) {
-        int best_rating = 0;
         if (flag_all_possible_moves[i] > best_rating) {
             best_rating = flag_all_possible_moves[i];
             best_index = i;
@@ -110,6 +114,7 @@ int bestmove() {
 
 /* calculates the possible moves of all of our pieces */
 char** possiblemoves(char board[8][8][25]) {
+  num_moves = 0;
     for (int x = 0; x < 8; x++) {
         for (int y = 0; y < 8; y++){
             if (our_playernum == 0) {
@@ -212,7 +217,7 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                             snprintf(temp_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
 
                         }
-                        
+
 
                         // memcpy(dest, src, sizeof (mytype) * rows * columns);
                         int temp_board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
@@ -225,11 +230,11 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                         }
                         else {
                             for(int direction=TOPLEFT; direction<=TOPRIGHT; direction++){
-                                
+
                                 // possibletowermoves(board, pos1_x, pos1_y, direction);
                             }
                         }
-                        
+
                     }
                     flag_all_possible_moves[num_moves] = BETTERMOVE;
 

@@ -257,7 +257,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             memset(server_placeholder, 0, MATCHLEN);
 
                             // write new gameboard into shared memory
-                            shm_info->game_info = game_and_players.game_info; 
+                            shm_info->game_info = game_and_players.game_info;
 
                             if (boardsreceived == 0) {
                                 // add our local structs to the shared memory segment
@@ -304,7 +304,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
 
                             // TEMPORARY!!
                             // This should eventually be moved to the GAME OVER Protokoll
-                            if (boardsreceived == 3) {
+                            if (boardsreceived == 5) {
                                 // detach from shared memory
                                 shmdt(shmid_ptr);
                                 shmdt(shm_info);
@@ -325,7 +325,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                         else if (sscanf(current, "+ MOVEO%s", server_placeholder) == 1) {
 
                         }
-                        
+
                         else {
                             perror("sscanf");
                             fprintf(stderr, "could not parse\n");
