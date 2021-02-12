@@ -16,6 +16,8 @@ typedef struct {
     int total_pieces;
     char board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
     int think_flag;
+    int gameover;
+    int winner;
     pid_t thinker_id;
     pid_t connector_id;
 } game_info;

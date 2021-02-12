@@ -42,6 +42,8 @@ int server_total_pieces;
 char horizontal;
 int vertical;
 char piece[PIECESLEN];
+int player_id;
+char winner[MATCHLEN];
 
 // Create ptr to all_info struct for shared memory data
 all_info * shm_info;
@@ -54,6 +56,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
     /* Enter the PID and PPID into the game_info struct */
     game_and_players.game_info.connector_id = getpid();
     game_and_players.game_info.thinker_id = getppid();
+    game_and_players.game_info.gameover = 0;
 
     /* set file descriptor for thinker pipe */
     // Wait for message from server or from thinker
@@ -317,15 +320,44 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                         }
 
                         else if (sscanf(current, "+ WA%s", server_placeholder) == 1){
+                            memset(server_placeholder, 0, MATCHLEN);
 
                             snprintf(client_msg, MSGLEN, "OKWAIT\n");
                             sendClientMsg(socket_file_descriptor);
                         }
 
                         else if (sscanf(current, "+ MOVEO%s", server_placeholder) == 1) {
-
+                            memset(server_placeholder, 0, MATCHLEN);
                         }
 
+                        else if (sscanf(current, "+ GAMEOV%s", server_placeholder) == 1) {
+                            memset(server_placeholder, 0, MATCHLEN);
+                            game_and_players.game_info.gameover = 1;
+                        }
+
+                        else if (sscanf(current, "+ PLAYER%dWON %s", &player_id, winner) == 1) {
+                            if (strcmp(winner, "Yes") == 0) {
+                                game_and_players.game_info.winner = player_id;
+                            }
+                            player_id = -1;
+                            memset(winner, 0, 4);
+                        }
+
+                        else if (sscanf(current, "+ QUI%s", server_placeholder) == 1) {
+                            memset(server_placeholder, 0, MATCHLEN);
+                            
+                            // set think-flag in shared memory
+                            shm_info->game_info.think_flag = 1;
+
+                            // send signal to parent that game info is ready
+                            kill(game_and_players.game_info.thinker_id, SIGUSR1);
+
+                            // detach from shared memory
+                            shmdt(shmid_ptr);
+                            shmdt(shm_info);
+                            exit(EXIT_SUCCESS);
+                        }
+                        
                         else {
                             perror("sscanf");
                             fprintf(stderr, "could not parse\n");
