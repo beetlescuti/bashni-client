@@ -19,7 +19,7 @@ void printboard(char board[8][8][25]){
     printf(" +-----------------+\n");
     printf("   A B C D E F G H\n");
 
-    printf("white towers\n");
+    printf("\nwhite towers\n");
     printf("------------\n");
     for (int x=0; x<8; x++) {
         for (int y=0; y<8; y++) {
@@ -38,4 +38,5 @@ void printboard(char board[8][8][25]){
             }
         }
     }
+    printf("\n");
 }

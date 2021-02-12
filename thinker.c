@@ -61,13 +61,27 @@ void think(int * shmid_ptr) {
     // set our player number
     our_playernum = rcv_info->game_info.our_playernum;
 
+
+
     // check if think_flag was set by the connector process
     if (rcv_info->game_info.think_flag == 1) {
         // immediately set think_flag back to zero
         rcv_info->game_info.think_flag = 0;
         // sind wir hell oder dunkel?
 
-        // snprintf(move, strlen("A3:B4\n")+1, "A3:B4\n");
+        // TEMP TEST CASE 
+        char test_board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
+        memcpy(test_board, rcv_info->game_info.board, sizeof(char)*MAXTOWERLEN*BOARDSIZE*BOARDSIZE);
+
+        printf("==========TEST BLOCK========\n");
+        snprintf(test_board[1][3], 5, "%s", "bwwb");
+        printboard(test_board);
+        removetoppiece(test_board, 1, 3);
+        printboard(test_board);
+        removetoppiece(test_board, 0, 0);
+        printboard(test_board);
+        printf("=======END TEST BLOCK=======\n");
+
 
         printboard(rcv_info->game_info.board);
         calculated_moves = possiblemoves(rcv_info->game_info.board);
@@ -185,17 +199,7 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
     newpoint = moveindirection(direction, pos_x, pos_y);
     pos_x = newpoint[0];
     pos_y = newpoint[1];
-
-    // TEMP TEST CASE 
-    // char test_board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
-    // memcpy(test_board, board, sizeof(MAXTOWERLEN) * BOARDSIZE * BOARDSIZE);
-
-    // snprintf(test_board[1][3], 5, "%s", "bwwb");
-    // printboard(test_board);
-    // removetoppiece(test_board, 1, 3);
-    // printboard;
     
-
 
     /* catch case for edge of board */
     if (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7) {
@@ -337,8 +341,15 @@ char toppiece(char board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN], int x, int y){
 
 /* removes the top piece from a tower at a given location */
 void removetoppiece(char board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN], int x, int y) {
-    int topindex = 0;
-    memmove(&board[x][y][topindex], &board[x][y][topindex+1], strlen(board[x][y]) - topindex);
+    // int topindex = 0;
+    // memmove(&board[x][y][topindex], &board[x][y][topindex+1], strlen(board[x][y]) - topindex);
+
+    int lastindex = strlen(board[x][y]) - 1;
+    char new_twr[MAXTOWERLEN];
+    snprintf(new_twr, MAXTOWERLEN, "%s", board[x][y]);
+    new_twr[lastindex] = '\0';
+    memset(board[x][y], 0, MAXTOWERLEN);
+    snprintf(board[x][y], MAXTOWERLEN, "%s", new_twr);
 }
 
 /* translates an x and y coord into a protocoll readable format
