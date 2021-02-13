@@ -257,11 +257,15 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                             // remove top piece from captured tower
                             removetoppiece(temp_board, pos_x, pos_y);
 
+
+                            int move_length;
+                            int new_move_length;
                             // test if piece became queen
                             if (pos1_y == 7) {
                                 // write our new tower at pos1_x, pos1_y
                                 snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "W");
                                 // check for further capture moves, recursion!
+
                                 for(int new_direction=TOPLEFT; new_direction<=BOTTOMRIGHT; new_direction++){
                                     // direction 0 -> 1, 2 nicht 3
                                     // direction 1 -> 0, 3 nicht 2
@@ -270,11 +274,21 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                                     // RULE: direction and new_direction CANNOT add to 3
 
                                     if (direction + new_direction != 3) {
+
+                                        move_length = strlen(tower_move);
                                         possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
+                                        new_move_length = strlen(tower_move);
+                                    }
+
+                                    if (new_move_length > move_length){
+                                        break;
                                     }
                                 }
                             }
+
                             else {
+                                move_length = strlen(tower_move);
+                                printf("move before recursion: %d \n", move_length);
                                 // write our new tower at pos1_x, pos1_y
                                 snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "w");
 
@@ -287,7 +301,17 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                                     // RULE: direction and new_direction CANNOT add to 3
 
                                     if (direction + new_direction != 3) {
+                                        printf("new direction: %d\n", new_direction);
+                                        move_length = strlen(tower_move);
+                                        printf("old_movelength: %d \n", move_length );
                                         possibletowermoves(temp_board, pos1_x, pos1_y, new_direction);
+                                        new_move_length = strlen(tower_move);
+                                        printf("new_movelength: %d \n", new_move_length );
+                                    }
+
+                                    if (new_move_length > move_length){
+                                        printf("found capturing move\n");
+                                        break;
                                     }
                                 }
                             }
