@@ -420,8 +420,12 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
     pos_y = newpoint[1];
 
     // while not edge case and next square is blank
+<<<<<<< HEAD
     while (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7 && break_hit_a_piece == 0) {
         printf("LOOKING AT: %s\n", translate_pos(pos_x, pos_y));
+=======
+    while (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7 && break_hit_our_piece == 0) {
+>>>>>>> a7c1322bbd044f61fa6aa72416fcb3cd65428959
         if (our_playernum == 0) {
             int pos1_x;
             int pos1_y;
@@ -436,6 +440,11 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                     // if field after the piece is not a an edge AND it's free
                     if (pos1_x >= 0 && pos1_x <= 7 && pos1_y >= 0 && pos1_y <= 7) {
                         if (toppiece(board, pos1_x, pos1_y) == ' ') {
+                            printf("going from %d,%d to %s\n", x, y, translate_pos(pos1_x, pos1_y));
+                            
+                            // START HERE -> ARBITRARY FLAG PLACEMENT
+                            break_hit_our_piece = 1;
+
                             // if first capture -> write pos:pos
                             if (strcmp(tower_move, "") == 0) {
                                 char pre_pos[POSLEN];
@@ -443,7 +452,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                                 char post_pos[POSLEN];
                                 snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
                                 snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
-
+                                
                                 flag_all_possible_moves[num_moves] = QUEENMOVE;
                             }
                             // otherwise we just want to write :pos onto the end
@@ -486,6 +495,8 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                                 // RULE: direction and new_direction CANNOT add to 3
 
                                 if (direction + new_direction != 3) {
+                                    
+                                    printf("entering recursive call\n");
                                     possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
                                 }
                             }
@@ -580,6 +591,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
         pos_x = newpoint[0];
         pos_y = newpoint[1];
     }
+    printf("leaving...\n");
 }
 
 /* returns the value of the top piece from board coordinates */
