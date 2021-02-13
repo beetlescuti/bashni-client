@@ -138,12 +138,20 @@ char** possiblemoves(char board[8][8][25]) {
                         printf("------------Entering first recursion call -----------\n");
                         possibletowermoves_queen(board, x,y, direction);
 
+
                         if (strcmp(tower_move, "") != 0) {
                             snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
-
                             printf("MOVE: %s %d\n", all_possible_moves[num_moves], flag_all_possible_moves[num_moves]);
-
                             num_moves++;
+                        }
+                        else{
+
+                            possibletowermoves(board, x,y, direction);
+                            if (strcmp(tower_move, "") != 0) {
+                                snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
+                                printf("MOVE: %s %d\n", all_possible_moves[num_moves], flag_all_possible_moves[num_moves]);
+                                num_moves++;
+                            }
                         }
                     }
                 }
