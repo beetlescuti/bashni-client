@@ -292,12 +292,14 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                                         possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
                                         new_move_length = strlen(tower_move);
                                         printf("new_move_length: %d \n", new_move_length );
+
+                                        if (new_move_length > move_length){
+                                            printf("found capturing move\n");
+                                            break;
+                                        }
                                     }
 
-                                    if (new_move_length > move_length){
-                                        printf("found capturing move\n");
-                                        break;
-                                    }
+
                                 }
                             }
 
@@ -321,12 +323,14 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                                         possibletowermoves(temp_board, pos1_x, pos1_y, new_direction);
                                         new_move_length = strlen(tower_move);
                                         printf("new_move_length: %d \n", new_move_length );
+
+                                        if (new_move_length > move_length){
+                                            printf("found capturing move\n");
+                                            break;
+                                        }
                                     }
 
-                                    if (new_move_length > move_length){
-                                        printf("found capturing move\n");
-                                        break;
-                                    }
+
                                 }
                             }
                         }
@@ -385,7 +389,7 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
 
                             int move_length;
                             int new_move_length;
-                            move_length = strlen(tower_move);
+
 
                             // test if piece became queen
                             if (pos1_y == 7) {
@@ -406,12 +410,14 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                                       possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
                                       new_move_length = strlen(tower_move);
                                       printf("new_move_length: %d \n", new_move_length );
+
+                                        if (new_move_length > move_length){
+                                            printf("found capturing move\n");
+                                            break;
+                                        }
                                     }
 
-                                    if (new_move_length > move_length){
-                                        printf("found capturing move\n");
-                                        break;
-                                    }
+
                                 }
                             }
                             else {
@@ -433,12 +439,14 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                                         possibletowermoves(temp_board, pos1_x, pos1_y, new_direction);
                                         new_move_length = strlen(tower_move);
                                         printf("new_move_length: %d \n", new_move_length );
+
+                                        if (new_move_length > move_length){
+                                            printf("found capturing move\n");
+                                            break;
+                                        }
                                     }
 
-                                    if (new_move_length > move_length){
-                                        printf("found capturing move\n");
-                                        break;
-                                    }
+
                                 }
                             }
                         }
@@ -546,14 +554,16 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
 
                             int move_length;
                             int new_move_length;
-                            move_length = strlen(tower_move);
 
+                            printf("we are going into the for_loop \n");
                             for(int new_direction=TOPLEFT; new_direction<=BOTTOMRIGHT; new_direction++){
                                 // direction 0 -> 1, 2 nicht 3
                                 // direction 1 -> 0, 3 nicht 2
                                 // direction 2 -> 0, 3 nicht 1
                                 // direction 3 -> 1, 2 nicht 0
                                 // RULE: direction and new_direction CANNOT add to 3
+
+
 
                                 if (direction + new_direction != 3) {
                                     printf("new direction: %d\n", new_direction);
@@ -562,12 +572,15 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                                     possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
                                     new_move_length = strlen(tower_move);
                                     printf("new_move_length: %d \n", new_move_length );
+
+                                    if (new_move_length > move_length){
+                                        printf("found capturing move\n");
+                                        break;
+                                    }
                                 }
 
-                                if (new_move_length > move_length){
-                                    printf("found capturing move\n");
-                                    break;
-                                }
+
+
                             }
                         }
                         else {
@@ -626,7 +639,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
 
                             int move_length;
                             int new_move_length;
-                            move_length = strlen(tower_move);
+
 
                             // check for further capture moves, recursion!
                             for(int new_direction=TOPLEFT; new_direction<=BOTTOMRIGHT; new_direction++){
@@ -643,12 +656,14 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                                     possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
                                     new_move_length = strlen(tower_move);
                                     printf("new_move_length: %d \n", new_move_length );
+
+
+                                    if (new_move_length > move_length){
+                                        printf("found capturing move\n");
+                                        break;
+                                    }
                                 }
 
-                                if (new_move_length > move_length){
-                                    printf("found capturing move\n");
-                                    break;
-                                }
                             }
                         }
                     }
