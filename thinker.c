@@ -525,7 +525,8 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                         if (toppiece(board, pos1_x, pos1_y) == ' ') {
                             printf("going from %d,%d to %s\n", x, y, translate_pos(pos1_x, pos1_y));
 
-                            // START HERE -> ARBITRARY FLAG PLACEMENT
+                            //we went through a piece, so there won't be further moves in this particular direction
+                            // -> breaking while-loop
                             break_hit_a_piece = 1;
 
                             // if first capture -> write pos:pos
@@ -585,12 +586,12 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
 
 
                                 if (direction + new_direction != 3) {
-                                    printf("new direction: %d\n", new_direction);
+                                    //printf("new direction: %d\n", new_direction);
                                     move_length = strlen(tower_move);
-                                    printf("old_movelength: %d \n", move_length );
+                                    //printf("old_movelength: %d \n", move_length );
                                     possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
                                     new_move_length = strlen(tower_move);
-                                    printf("new_move_length: %d \n", new_move_length );
+                                    //printf("new_move_length: %d \n", new_move_length );
 
                                     if (new_move_length > move_length){
                                         printf("found capturing move\n");
@@ -614,6 +615,11 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
 
                     // if field after the piece is not a an edge AND it's free
                     if (pos1_x >= 0 && pos1_x <= 7 && pos1_y >= 0 && pos1_y <= 7) {
+
+                        //we went through a piece, so there won't be further moves in this particular direction
+                        // -> breaking while-loop
+                        break_hit_a_piece = 1;
+
                         if (toppiece(board, pos1_x, pos1_y) == ' ') {
                             // if first capture -> write pos:pos
                             if (strcmp(tower_move, "") == 0) {
@@ -669,12 +675,12 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                                 // RULE: direction and new_direction CANNOT add to 3
 
                                 if (direction + new_direction != 3) {
-                                    printf("new direction: %d\n", new_direction);
+                                    //printf("new direction: %d\n", new_direction);
                                     move_length = strlen(tower_move);
-                                    printf("old_movelength: %d \n", move_length );
+                                    //printf("old_movelength: %d \n", move_length );
                                     possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
                                     new_move_length = strlen(tower_move);
-                                    printf("new_move_length: %d \n", new_move_length );
+                                    //printf("new_move_length: %d \n", new_move_length );
 
 
                                     if (new_move_length > move_length){
