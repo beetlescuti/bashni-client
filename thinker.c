@@ -437,7 +437,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                             printf("going from %d,%d to %s\n", x, y, translate_pos(pos1_x, pos1_y));
 
                             // START HERE -> ARBITRARY FLAG PLACEMENT
-                            //break_hit_a_piece = 1;
+                            break_hit_a_piece = 1;
 
                             // if first capture -> write pos:pos
                             if (strcmp(tower_move, "") == 0) {

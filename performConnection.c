@@ -312,12 +312,14 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                         else if (sscanf(current, "+ GAMEOV%s", server_placeholder) == 1) {
                             memset(server_placeholder, 0, MATCHLEN);
                             game_and_players.game_info.gameover = 1;
+                            shm_info->game_info.gameover = game_and_players.game_info.gameover;
                         }
 
                         else if (sscanf(current, "+ PLAYER0WON %s", winner) == 1) {
                             player_id = 0;
                             if (strcmp(winner, "Yes") == 0) {
                                 game_and_players.game_info.winner = player_id;
+                                shm_info->game_info.winner = game_and_players.game_info.winner;
                             }
                             player_id = -1;
                             memset(winner, 0, MATCHLEN);
@@ -327,6 +329,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             player_id = 1;
                             if (strcmp(winner, "Yes") == 0) {
                                 game_and_players.game_info.winner = player_id;
+                                shm_info->game_info.winner = game_and_players.game_info.winner;
                             }
                             player_id = -1;
                             memset(winner, 0, MATCHLEN);
