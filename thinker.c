@@ -144,9 +144,28 @@ char** possiblemoves(char board[8][8][25]) {
                             printf("MOVE: %s %d\n", all_possible_moves[num_moves], flag_all_possible_moves[num_moves]);
                             num_moves++;
                         }
-                        else{
 
-                            possibletowermoves(board, x,y, direction);
+                        //check if, given the case the queen couldnt capture, there are simple one-field moves in a direction
+                        else {
+                            int pos_x = x;
+                            int pos_y = y;
+
+                            int* newpoint;
+                            newpoint = moveindirection(direction, pos_x, pos_y);
+                            pos_x = newpoint[0];
+                            pos_y = newpoint[1];
+
+                            if (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7) {
+                              if (toppiece(board, pos_x, pos_y) == ' ') {
+                                char pre_pos[POSLEN];
+                                snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
+                                char post_pos[POSLEN];
+                                snprintf(post_pos, POSLEN, "%s", translate_pos(pos_x, pos_y));
+                                snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+                                flag_all_possible_moves[num_moves] = BADMOVE;
+                              }
+                            }
+
                             if (strcmp(tower_move, "") != 0) {
                                 snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
                                 printf("MOVE: %s %d\n", all_possible_moves[num_moves], flag_all_possible_moves[num_moves]);
