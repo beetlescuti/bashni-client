@@ -162,8 +162,7 @@ char** possiblemoves(char board[8][8][25]) {
     num_moves = 0;
     for (int x = 0; x < 8; x++) {
         for (int y = 0; y < 8; y++){
-            if (our_playernum == 0) {
-                if (toppiece(board, x, y) == 'W'){
+                if (toppiece(board, x, y) == ourqueen){
                     for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
                         memset(tower_move, 0, MAXMOVELEN);
                         printf("------------Entering first recursion call -----------\n");
@@ -205,7 +204,7 @@ char** possiblemoves(char board[8][8][25]) {
                         }
                     }
                 }
-                else if (toppiece(board, x, y) == 'w'){
+                else if (toppiece(board, x, y) == ourtower){
                     for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
 
                         memset(tower_move, 0, MAXMOVELEN);
@@ -220,30 +219,8 @@ char** possiblemoves(char board[8][8][25]) {
                         }
                     }
                 }
-            }
-            else if (our_playernum == 1) {
-                if (toppiece(board, x, y) == 'B'){
-                    for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
-                        //TODO: create new function that calculates the moves a queen can do, since it will behave differently in calc_move()
-                        //possibletowermoves(board, x,y, direction);
-                    }
-                }
-                else if (toppiece(board, x, y) == 'b'){
-                    for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
-                        possibletowermoves(board, x,y, direction);
 
-                        if (strcmp(tower_move, "") != 0) {
-                            snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
-
-                            printf("MOVE: %s %d\n", all_possible_moves[num_moves], flag_all_possible_moves[num_moves]);
-
-                            num_moves++;
-                        }
-                    }
-                }
-            }
-        }
-    }
+                    }}
     return (char**)all_possible_moves;
 }
 
