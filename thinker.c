@@ -50,6 +50,15 @@ int num_moves = 0;
 
 all_info * rcv_info = NULL;
 
+// info about color
+char ourqueen;
+char ourtower;
+char opponentsqueen;
+char opponentstower;
+int forwardmoves[2];
+
+
+
 void think(int * shmid_ptr) {
     printf("were in the thinker...\n");
     // grab the actual shmid from shmid_ptr
@@ -62,11 +71,33 @@ void think(int * shmid_ptr) {
             printf("Error attaching shared memory.\n");
         perror("shmat");
         }
+
+        // set our player number
+        our_playernum = rcv_info->game_info.our_playernum;
+
+        if (our_playernum == 0){
+            ourqueen = 'W';
+            ourtower = 'w';
+            opponentsqueen = 'B';
+            opponentstower= 'b';
+            forwardmoves[0] = TOPLEFT;
+            forwardmoves[1] = TOPRIGHT;
+        }
+        else {
+            ourqueen = 'B';
+            ourtower = 'b';
+            opponentsqueen = 'W';
+            opponentstower= 'w';
+            forwardmoves[0] = BOTTOMLEFT;
+            forwardmoves[1] = BOTTOMRIGHT;
+
+        }
+
+
         first_think = 1;
     }
 
-    // set our player number
-    our_playernum = rcv_info->game_info.our_playernum;
+
 
     // check if think_flag was set by the connector process
     if (rcv_info->game_info.think_flag == 1) {
