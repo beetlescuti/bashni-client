@@ -566,7 +566,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                         removetoppiece(temp_board, pos_x, pos_y);
 
                         // write our new tower at pos1_x, pos1_y
-                        snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "w");
+                        snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourqueen);
 
                         // check for further capture moves, recursion!
 
@@ -657,7 +657,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                         removetoppiece(temp_board, pos_x, pos_y);
 
                         // write our new tower at pos1_x, pos1_y
-                        snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "w");
+                        snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourtower);
 
                         int move_length;
                         int new_move_length;
