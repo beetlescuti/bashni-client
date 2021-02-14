@@ -35,20 +35,20 @@
 #define POSLEN 3
 
 int shmid_for_info;
-char move[MSGLEN-6];
+char move[MSGLEN - 6];
 int n;
 int our_playernum;
 int first_think = 0;
 
 char tower_move[MAXMOVELEN];
 bool break_case = true;
-char** calculated_moves;
+char **calculated_moves;
 
 char all_possible_moves[MAXMOVES][MAXMOVELEN];
 int flag_all_possible_moves[MAXMOVES];
 int num_moves = 0;
 
-all_info * rcv_info = NULL;
+all_info *rcv_info = NULL;
 
 // info about color
 char ourqueen;
@@ -58,36 +58,34 @@ char opponentstower;
 int forwardmoves[2];
 
 
-
-void think(int * shmid_ptr) {
+void think(int *shmid_ptr) {
     printf("were in the thinker...\n");
     // grab the actual shmid from shmid_ptr
     shmid_for_info = *shmid_ptr;
 
     // attach to shared memory
     if (first_think == 0) {
-        rcv_info = (all_info*) shmat(shmid_for_info, NULL, 0);
+        rcv_info = (all_info *) shmat(shmid_for_info, NULL, 0);
         if (rcv_info == (void *) -1) {
             printf("Error attaching shared memory.\n");
-        perror("shmat");
+            perror("shmat");
         }
 
         // set our player number
         our_playernum = rcv_info->game_info.our_playernum;
 
-        if (our_playernum == 0){
+        if (our_playernum == 0) {
             ourqueen = 'W';
             ourtower = 'w';
             opponentsqueen = 'B';
-            opponentstower= 'b';
+            opponentstower = 'b';
             forwardmoves[0] = TOPLEFT;
             forwardmoves[1] = TOPRIGHT;
-        }
-        else {
+        } else {
             ourqueen = 'B';
             ourtower = 'b';
             opponentsqueen = 'W';
-            opponentstower= 'w';
+            opponentstower = 'w';
             forwardmoves[0] = BOTTOMLEFT;
             forwardmoves[1] = BOTTOMRIGHT;
 
@@ -123,12 +121,11 @@ void think(int * shmid_ptr) {
             }
 
             //write move into pipe
-            if ((write (fd[1], move, strlen(move) + 1)) == -1) {
-                perror ("write");
-                exit (EXIT_FAILURE);
+            if ((write(fd[1], move, strlen(move) + 1)) == -1) {
+                perror("write");
+                exit(EXIT_FAILURE);
             }
-        }
-        else {
+        } else {
             gameover();
 
             // detach from shared memory
@@ -136,8 +133,7 @@ void think(int * shmid_ptr) {
             shmdt(rcv_info);
         }
 
-    }
-    else {
+    } else {
         printf("error: thinker_flag not set.\n");
     }
 
@@ -158,70 +154,70 @@ int bestmove() {
 }
 
 /* calculates the possible moves of all of our pieces */
-char** possiblemoves(char board[8][8][25]) {
+char **possiblemoves(char board[8][8][25]) {
     num_moves = 0;
     for (int x = 0; x < 8; x++) {
-        for (int y = 0; y < 8; y++){
-                if (toppiece(board, x, y) == ourqueen){
-                    for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
-                        memset(tower_move, 0, MAXMOVELEN);
-                        printf("------------Entering first recursion call -----------\n");
-                        possibletowermoves_queen(board, x,y, direction);
+        for (int y = 0; y < 8; y++) {
+            if (toppiece(board, x, y) == ourqueen) {
+                for (int direction = TOPLEFT; direction <= BOTTOMRIGHT; direction++) {
+                    memset(tower_move, 0, MAXMOVELEN);
+                    printf("------------Entering first recursion call -----------\n");
+                    possibletowermoves_queen(board, x, y, direction);
 
 
-                        if (strcmp(tower_move, "") != 0) {
-                            snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
-                            printf("MOVE: %s %d\n", all_possible_moves[num_moves], flag_all_possible_moves[num_moves]);
-                            num_moves++;
-                        }
+                    if (strcmp(tower_move, "") != 0) {
+                        snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
+                        printf("MOVE: %s %d\n", all_possible_moves[num_moves], flag_all_possible_moves[num_moves]);
+                        num_moves++;
+                    }
 
                         //check if, given the case the queen couldnt capture, there are simple one-field moves in a direction
-                        else {
-                            int pos_x = x;
-                            int pos_y = y;
+                    else {
+                        int pos_x = x;
+                        int pos_y = y;
 
-                            int* newpoint;
-                            newpoint = moveindirection(direction, pos_x, pos_y);
-                            pos_x = newpoint[0];
-                            pos_y = newpoint[1];
+                        int *newpoint;
+                        newpoint = moveindirection(direction, pos_x, pos_y);
+                        pos_x = newpoint[0];
+                        pos_y = newpoint[1];
 
-                            if (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7) {
-                              if (toppiece(board, pos_x, pos_y) == ' ') {
+                        if (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7) {
+                            if (toppiece(board, pos_x, pos_y) == ' ') {
                                 char pre_pos[POSLEN];
                                 snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
                                 char post_pos[POSLEN];
                                 snprintf(post_pos, POSLEN, "%s", translate_pos(pos_x, pos_y));
                                 snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
                                 flag_all_possible_moves[num_moves] = BADMOVE;
-                              }
-                            }
-
-                            if (strcmp(tower_move, "") != 0) {
-                                snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
-                                printf("MOVE: %s %d\n", all_possible_moves[num_moves], flag_all_possible_moves[num_moves]);
-                                num_moves++;
                             }
                         }
-                    }
-                }
-                else if (toppiece(board, x, y) == ourtower){
-                    for(int direction=TOPLEFT; direction<=BOTTOMRIGHT; direction++){
-
-                        memset(tower_move, 0, MAXMOVELEN);
-                        possibletowermoves(board, x, y, direction);
 
                         if (strcmp(tower_move, "") != 0) {
                             snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
-
                             printf("MOVE: %s %d\n", all_possible_moves[num_moves], flag_all_possible_moves[num_moves]);
-
                             num_moves++;
                         }
                     }
                 }
+            } else if (toppiece(board, x, y) == ourtower) {
+                for (int direction = TOPLEFT; direction <= BOTTOMRIGHT; direction++) {
 
-                    }}
-    return (char**)all_possible_moves;
+                    memset(tower_move, 0, MAXMOVELEN);
+                    possibletowermoves(board, x, y, direction);
+
+                    if (strcmp(tower_move, "") != 0) {
+                        snprintf(all_possible_moves[num_moves], MAXMOVELEN, "%s", tower_move);
+
+                        printf("MOVE: %s %d\n", all_possible_moves[num_moves], flag_all_possible_moves[num_moves]);
+
+                        num_moves++;
+                    }
+                }
+            }
+
+        }
+    }
+    return (char **) all_possible_moves;
 }
 
 /* FOR NORMAL PIECES:
@@ -232,348 +228,77 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
     int pos_x = x;
     int pos_y = y;
 
-    int* newpoint;
+    int *newpoint;
     newpoint = moveindirection(direction, pos_x, pos_y);
     pos_x = newpoint[0];
     pos_y = newpoint[1];
 
     /* catch case for edge of board */
     if (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7) {
-            printf("LOOKING AT: %s\n", translate_pos(pos_x, pos_y));
-            int pos1_x;
-            int pos1_y;
-            int* nextpoint;
+        printf("LOOKING AT: %s\n", translate_pos(pos_x, pos_y));
+        int pos1_x;
+        int pos1_y;
+        int *nextpoint;
 
-            if (toppiece(board, pos_x, pos_y) == opponentstower) {
-                    nextpoint = moveindirection(direction, pos_x, pos_y);
-                    pos1_x = nextpoint[0];
-                    pos1_y = nextpoint[1];
+        if (toppiece(board, pos_x, pos_y) == opponentstower) {
+            nextpoint = moveindirection(direction, pos_x, pos_y);
+            pos1_x = nextpoint[0];
+            pos1_y = nextpoint[1];
 
-                    /* catch case for edge of board */
-                    if (pos1_x >= 0 && pos1_x <= 7 && pos1_y >= 0 && pos1_y <= 7) {
+            /* catch case for edge of board */
+            if (pos1_x >= 0 && pos1_x <= 7 && pos1_y >= 0 && pos1_y <= 7) {
 
-                        if (toppiece(board, pos1_x, pos1_y) == ' ') {
-                            // if first capture -> write pos:pos
-                            if (strcmp(tower_move, "") == 0) {
-                                char pre_pos[POSLEN];
-                                snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
-                                char post_pos[POSLEN];
-                                snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
-                                snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+                if (toppiece(board, pos1_x, pos1_y) == ' ') {
+                    // if first capture -> write pos:pos
+                    if (strcmp(tower_move, "") == 0) {
+                        char pre_pos[POSLEN];
+                        snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
+                        char post_pos[POSLEN];
+                        snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
+                        snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
 
-                                flag_all_possible_moves[num_moves] = BETTERMOVE;
-                            }
-                            // otherwise we just want to write :pos onto the end
-                            else {
-                                // write ending pos into string
-                                char temp_pos[POSLEN];
-                                snprintf(temp_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
-
-                                // write all previous partial moves into string
-                                char already_moved[MAXMOVELEN];
-                                snprintf(already_moved, MAXMOVELEN, "%s", tower_move);
-
-                                // concat previous partial moves with new capturing move
-                                snprintf(tower_move, MAXMOVELEN - (strlen(already_moved) + 1), "%s:%s", already_moved, temp_pos);
-
-                                // increment our move flag to show that this move is better
-                                flag_all_possible_moves[num_moves]++;
-                            }
-
-                            // make temp board for recursion
-                            char temp_board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
-                            memcpy(temp_board, board, sizeof(char)*MAXTOWERLEN*BOARDSIZE*BOARDSIZE);
-
-                            // make first move on the temp board
-                            // remove our whole tower at x, y
-                            memset(temp_board[x][y], 0, MAXTOWERLEN);
-
-                            // remove top piece from captured tower
-                            removetoppiece(temp_board, pos_x, pos_y);
-
-
-
-                            int move_length;
-                            int new_move_length;
-                            move_length = strlen(tower_move);
-
-                            // test if piece became queen
-                            if (pos1_y == 7) {
-                                // write our new tower at pos1_x, pos1_y
-                                snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourqueen);
-                                // check for further capture moves, recursion!
-
-                                for(int new_direction=TOPLEFT; new_direction<=BOTTOMRIGHT; new_direction++){
-                                    // direction 0 -> 1, 2 nicht 3
-                                    // direction 1 -> 0, 3 nicht 2
-                                    // direction 2 -> 0, 3 nicht 1
-                                    // direction 3 -> 1, 2 nicht 0
-                                    // RULE: direction and new_direction CANNOT add to 3
-
-                                    if (direction + new_direction != 3) {
-                                        printf("new direction: %d\n", new_direction);
-                                        move_length = strlen(tower_move);
-                                        printf("old_movelength: %d \n", move_length );
-                                        possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
-                                        new_move_length = strlen(tower_move);
-                                        printf("new_move_length: %d \n", new_move_length );
-
-                                        if (new_move_length > move_length){
-                                            printf("found capturing move\n");
-                                            break;
-                                        }
-                                    }
-
-
-                                }
-                            }
-
-                            else {
-                                printf("move before recursion: %s \n", tower_move);
-                                // write our new tower at pos1_x, pos1_y
-                                snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourtower);
-                                // check for further capture moves, recursion!
-                                for(int new_direction=TOPLEFT; new_direction<=BOTTOMRIGHT; new_direction++) {
-                                    // direction 0 -> 1, 2 nicht 3
-                                    // direction 1 -> 0, 3 nicht 2
-                                    // direction 2 -> 0, 3 nicht 1
-                                    // direction 3 -> 1, 2 nicht 0
-                                    // RULE: direction and new_direction CANNOT add to 3
-
-                                    if (direction + new_direction != 3) {
-                                        printf("new direction: %d\n", new_direction);
-                                        move_length = strlen(tower_move);
-                                        printf("old_movelength: %d \n", move_length );
-                                        possibletowermoves(temp_board, pos1_x, pos1_y, new_direction);
-                                        new_move_length = strlen(tower_move);
-                                        printf("new_move_length: %d \n", new_move_length );
-
-                                        if (new_move_length > move_length){
-                                            printf("found capturing move\n");
-                                            break;
-                                        }
-                                    }
-
-
-                                }
-                            }
-                        }
-                    }}
-                   else if (toppiece(board, pos_x, pos_y) == opponentsqueen) {
-
-                nextpoint = moveindirection(direction, pos_x, pos_y);
-                pos1_x = nextpoint[0];
-                pos1_y = nextpoint[1];
-
-                /* catch case for edge of board */
-                if (pos1_x >= 0 && pos1_x <= 7 && pos1_y >= 0 && pos1_y <= 7) {
-
-                    if (toppiece(board, pos1_x, pos1_y) == ' ') {
-                        // if first capture -> write pos:pos
-                        if (strcmp(tower_move, "") == 0) {
-                            char pre_pos[POSLEN];
-                            snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
-                            char post_pos[POSLEN];
-                            snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
-                            snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
-
-                            flag_all_possible_moves[num_moves] = EVENBETTERMOVE;
-                        }
-                            // otherwise we just want to write :pos onto the end
-                        else {
-                            // write ending pos into string
-                            char temp_pos[POSLEN];
-                            snprintf(temp_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
-
-                            // write all previous partial moves into string
-                            char already_moved[MAXMOVELEN];
-                            snprintf(already_moved, MAXMOVELEN, "%s", tower_move);
-
-                            // delete old partial moves
-                            //memset(tower_move, 0, MAXMOVELEN);
-
-                            // concat previous partial moves with new capturing move
-                            snprintf(tower_move, MAXMOVELEN - (strlen(already_moved) + 1), "%s:%s", already_moved,
-                                     temp_pos);
-
-                            // increment our move flag to show that this move is better
-                            flag_all_possible_moves[num_moves]++;
-                            flag_all_possible_moves[num_moves]++;
-                        }
-
-                        // make temp board for recursion
-                        char temp_board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
-                        memcpy(temp_board, board, sizeof(char) * MAXTOWERLEN * BOARDSIZE * BOARDSIZE);
-
-                        // make first move on the temp board
-                        // remove our whole tower at x, y
-                        memset(temp_board[x][y], 0, MAXTOWERLEN);
-
-                        // remove top piece from captured tower
-                        removetoppiece(temp_board, pos_x, pos_y);
-
-                        int move_length;
-                        int new_move_length;
-
-
-                        // test if piece became queen
-                        if (pos1_y == 7) {
-                            // write our new tower at pos1_x, pos1_y
-                            // TODO: Not sure if this ourqueen will cause problems:
-                            snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourqueen);
-                            // check for further capture moves, recursion!
-                            for (int new_direction = TOPLEFT; new_direction <= BOTTOMRIGHT; new_direction++) {
-                                // direction 0 -> 1, 2 nicht 3
-                                // direction 1 -> 0, 3 nicht 2
-                                // direction 2 -> 0, 3 nicht 1
-                                // direction 3 -> 1, 2 nicht 0
-                                // RULE: direction and new_direction CANNOT add to 3
-
-                                if (direction + new_direction != 3) {
-                                    printf("new direction: %d\n", new_direction);
-                                    move_length = strlen(tower_move);
-                                    printf("old_movelength: %d \n", move_length);
-                                    possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
-                                    new_move_length = strlen(tower_move);
-                                    printf("new_move_length: %d \n", new_move_length);
-
-                                    if (new_move_length > move_length) {
-                                        printf("found capturing move\n");
-                                        break;
-                                    }
-                                }
-
-
-                            }
-                        } else {
-                            // write our new tower at pos1_x, pos1_y
-                            snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourqueen);
-
-                            // check for further capture moves, recursion!
-                            for (int new_direction = TOPLEFT; new_direction <= BOTTOMRIGHT; new_direction++) {
-                                // direction 0 -> 1, 2 nicht 3
-                                // direction 1 -> 0, 3 nicht 2
-                                // direction 2 -> 0, 3 nicht 1
-                                // direction 3 -> 1, 2 nicht 0
-                                // RULE: direction and new_direction CANNOT add to 3
-
-                                if (direction + new_direction != 3) {
-                                    printf("new direction: %d\n", new_direction);
-                                    move_length = strlen(tower_move);
-                                    printf("old_movelength: %d \n", move_length);
-                                    possibletowermoves(temp_board, pos1_x, pos1_y, new_direction);
-                                    new_move_length = strlen(tower_move);
-                                    printf("new_move_length: %d \n", new_move_length);
-
-                                    if (new_move_length > move_length) {
-                                        printf("found capturing move\n");
-                                        break;
-                                    }
-                                }
-
-
-                            }
-                        }
+                        flag_all_possible_moves[num_moves] = BETTERMOVE;
                     }
-                }
-            }
-            else if (toppiece(board, pos_x, pos_y) == ' '){
-                    if (direction == forwardmoves[0] || direction == forwardmoves[1]) {
-                        if (strcmp(tower_move, "") == 0) {
-                            char pre_pos[POSLEN];
-                            snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
-                            char post_pos[POSLEN];
-                            snprintf(post_pos, POSLEN, "%s", translate_pos(pos_x, pos_y));
-                            snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+                        // otherwise we just want to write :pos onto the end
+                    else {
+                        // write ending pos into string
+                        char temp_pos[POSLEN];
+                        snprintf(temp_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
 
-                            flag_all_possible_moves[num_moves] = BADMOVE;
-                        }
-                    }}
-            }
-    }
+                        // write all previous partial moves into string
+                        char already_moved[MAXMOVELEN];
+                        snprintf(already_moved, MAXMOVELEN, "%s", tower_move);
+
+                        // concat previous partial moves with new capturing move
+                        snprintf(tower_move, MAXMOVELEN - (strlen(already_moved) + 1), "%s:%s", already_moved,
+                                 temp_pos);
+
+                        // increment our move flag to show that this move is better
+                        flag_all_possible_moves[num_moves]++;
+                    }
+
+                    // make temp board for recursion
+                    char temp_board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
+                    memcpy(temp_board, board, sizeof(char) * MAXTOWERLEN * BOARDSIZE * BOARDSIZE);
+
+                    // make first move on the temp board
+                    // remove our whole tower at x, y
+                    memset(temp_board[x][y], 0, MAXTOWERLEN);
+
+                    // remove top piece from captured tower
+                    removetoppiece(temp_board, pos_x, pos_y);
 
 
-/* FOR A QUEEN PIECE:
-   calculates the possible moves of ONE pieces in ONE direction,
-   this should be looped over in possiblemoves,
-   returns empty string if no moves availalbe */
-void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction){
-    int break_hit_a_piece = 0;
-    int pos_x = x;
-    int pos_y = y;
+                    int move_length;
+                    int new_move_length;
+                    move_length = strlen(tower_move);
 
-    int* newpoint;
-    newpoint = moveindirection(direction, pos_x, pos_y);
-    pos_x = newpoint[0];
-    pos_y = newpoint[1];
-
-    // while not edge case and next square is blank
-    while (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7 && break_hit_a_piece == 0) {
-            int pos1_x;
-            int pos1_y;
-            int* nextpoint;
-            if (toppiece(board, pos_x, pos_y) == opponentstower) {
-                nextpoint = moveindirection(direction, pos_x, pos_y);
-                pos1_x = nextpoint[0];
-                pos1_y = nextpoint[1];
-
-                // if field after the piece is not a an edge AND it's free
-                if (pos1_x >= 0 && pos1_x <= 7 && pos1_y >= 0 && pos1_y <= 7) {
-                    if (toppiece(board, pos1_x, pos1_y) == ' ') {
-                        printf("going from %d,%d to %s\n", x, y, translate_pos(pos1_x, pos1_y));
-
-                        //we went through a piece, so there won't be further moves in this particular direction
-                        // -> breaking while-loop
-                        break_hit_a_piece = 1;
-
-                        // if first capture -> write pos:pos
-                        if (strcmp(tower_move, "") == 0) {
-                            char pre_pos[POSLEN];
-                            snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
-                            char post_pos[POSLEN];
-                            snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
-                            snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
-
-                            flag_all_possible_moves[num_moves] = QUEENMOVE;
-                        }
-                            // otherwise we just want to write :pos onto the end
-                        else {
-                            // write ending pos into string
-                            char temp_pos[POSLEN];
-                            snprintf(temp_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
-
-                            // write all previous partial moves into string
-                            char already_moved[MAXMOVELEN];
-                            snprintf(already_moved, MAXMOVELEN, "%s", tower_move);
-
-                            // concat previous partial moves with new capturing move
-                            snprintf(tower_move, MAXMOVELEN - (strlen(already_moved) + 1), "%s:%s", already_moved,
-                                     temp_pos);
-
-                            // increment our move flag to show that this move is better
-                            flag_all_possible_moves[num_moves]++;
-                        }
-
-                        // make temp board for recursion
-                        char temp_board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
-                        memcpy(temp_board, board, sizeof(char) * MAXTOWERLEN * BOARDSIZE * BOARDSIZE);
-
-                        // make first move on the temp board
-                        // remove our whole tower at x, y
-                        memset(temp_board[x][y], 0, MAXTOWERLEN);
-
-                        // remove top piece from captured tower
-                        removetoppiece(temp_board, pos_x, pos_y);
-
+                    // test if piece became queen
+                    if (pos1_y == 7) {
                         // write our new tower at pos1_x, pos1_y
                         snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourqueen);
-
                         // check for further capture moves, recursion!
 
-                        int move_length;
-                        int new_move_length;
-
-                        printf("we are going into the for_loop \n");
                         for (int new_direction = TOPLEFT; new_direction <= BOTTOMRIGHT; new_direction++) {
                             // direction 0 -> 1, 2 nicht 3
                             // direction 1 -> 0, 3 nicht 2
@@ -581,15 +306,13 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                             // direction 3 -> 1, 2 nicht 0
                             // RULE: direction and new_direction CANNOT add to 3
 
-
-
                             if (direction + new_direction != 3) {
-                                //printf("new direction: %d\n", new_direction);
+                                printf("new direction: %d\n", new_direction);
                                 move_length = strlen(tower_move);
-                                //printf("old_movelength: %d \n", move_length );
+                                printf("old_movelength: %d \n", move_length);
                                 possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
                                 new_move_length = strlen(tower_move);
-                                //printf("new_move_length: %d \n", new_move_length );
+                                printf("new_move_length: %d \n", new_move_length);
 
                                 if (new_move_length > move_length) {
                                     printf("found capturing move\n");
@@ -600,68 +323,125 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
 
                         }
                     } else {
-                        break_hit_a_piece = 1;
+                        printf("move before recursion: %s \n", tower_move);
+                        // write our new tower at pos1_x, pos1_y
+                        snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourtower);
+                        // check for further capture moves, recursion!
+                        for (int new_direction = TOPLEFT; new_direction <= BOTTOMRIGHT; new_direction++) {
+                            // direction 0 -> 1, 2 nicht 3
+                            // direction 1 -> 0, 3 nicht 2
+                            // direction 2 -> 0, 3 nicht 1
+                            // direction 3 -> 1, 2 nicht 0
+                            // RULE: direction and new_direction CANNOT add to 3
+
+                            if (direction + new_direction != 3) {
+                                printf("new direction: %d\n", new_direction);
+                                move_length = strlen(tower_move);
+                                printf("old_movelength: %d \n", move_length);
+                                possibletowermoves(temp_board, pos1_x, pos1_y, new_direction);
+                                new_move_length = strlen(tower_move);
+                                printf("new_move_length: %d \n", new_move_length);
+
+                                if (new_move_length > move_length) {
+                                    printf("found capturing move\n");
+                                    break;
+                                }
+                            }
+
+
+                        }
                     }
                 }
             }
-                else if (toppiece(board, pos_x, pos_y) == opponentsqueen) {
-                nextpoint = moveindirection(direction, pos_x, pos_y);
-                pos1_x = nextpoint[0];
-                pos1_y = nextpoint[1];
+        } else if (toppiece(board, pos_x, pos_y) == opponentsqueen) {
 
-                // if field after the piece is not a an edge AND it's free
-                if (pos1_x >= 0 && pos1_x <= 7 && pos1_y >= 0 && pos1_y <= 7) {
+            nextpoint = moveindirection(direction, pos_x, pos_y);
+            pos1_x = nextpoint[0];
+            pos1_y = nextpoint[1];
 
-                    //we went through a piece, so there won't be further moves in this particular direction
-                    // -> breaking while-loop
-                    break_hit_a_piece = 1;
+            /* catch case for edge of board */
+            if (pos1_x >= 0 && pos1_x <= 7 && pos1_y >= 0 && pos1_y <= 7) {
 
-                    if (toppiece(board, pos1_x, pos1_y) == ' ') {
-                        // if first capture -> write pos:pos
-                        if (strcmp(tower_move, "") == 0) {
-                            char pre_pos[POSLEN];
-                            snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
-                            char post_pos[POSLEN];
-                            snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
-                            snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+                if (toppiece(board, pos1_x, pos1_y) == ' ') {
+                    // if first capture -> write pos:pos
+                    if (strcmp(tower_move, "") == 0) {
+                        char pre_pos[POSLEN];
+                        snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
+                        char post_pos[POSLEN];
+                        snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
+                        snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
 
-                            flag_all_possible_moves[num_moves] = QUEENMOVE;
-                        }
-                            // otherwise we just want to write :pos onto the end
-                        else {
-                            // write ending pos into string
-                            char temp_pos[POSLEN];
-                            snprintf(temp_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
+                        flag_all_possible_moves[num_moves] = EVENBETTERMOVE;
+                    }
+                        // otherwise we just want to write :pos onto the end
+                    else {
+                        // write ending pos into string
+                        char temp_pos[POSLEN];
+                        snprintf(temp_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
 
-                            // write all previous partial moves into string
-                            char already_moved[MAXMOVELEN];
-                            snprintf(already_moved, MAXMOVELEN, "%s", tower_move);
+                        // write all previous partial moves into string
+                        char already_moved[MAXMOVELEN];
+                        snprintf(already_moved, MAXMOVELEN, "%s", tower_move);
 
-                            // concat previous partial moves with new capturing move
-                            snprintf(tower_move, MAXMOVELEN - (strlen(already_moved) + 1), "%s:%s", already_moved,
-                                     temp_pos);
+                        // delete old partial moves
+                        //memset(tower_move, 0, MAXMOVELEN);
 
-                            // increment our move flag to show that this move is better
-                            flag_all_possible_moves[num_moves]++;
-                        }
+                        // concat previous partial moves with new capturing move
+                        snprintf(tower_move, MAXMOVELEN - (strlen(already_moved) + 1), "%s:%s", already_moved,
+                                 temp_pos);
 
-                        // make temp board for recursion
-                        char temp_board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
-                        memcpy(temp_board, board, sizeof(char) * MAXTOWERLEN * BOARDSIZE * BOARDSIZE);
+                        // increment our move flag to show that this move is better
+                        flag_all_possible_moves[num_moves]++;
+                        flag_all_possible_moves[num_moves]++;
+                    }
 
-                        // make first move on the temp board
-                        // remove our whole tower at x, y
-                        memset(temp_board[x][y], 0, MAXTOWERLEN);
+                    // make temp board for recursion
+                    char temp_board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
+                    memcpy(temp_board, board, sizeof(char) * MAXTOWERLEN * BOARDSIZE * BOARDSIZE);
 
-                        // remove top piece from captured tower
-                        removetoppiece(temp_board, pos_x, pos_y);
+                    // make first move on the temp board
+                    // remove our whole tower at x, y
+                    memset(temp_board[x][y], 0, MAXTOWERLEN);
 
+                    // remove top piece from captured tower
+                    removetoppiece(temp_board, pos_x, pos_y);
+
+                    int move_length;
+                    int new_move_length;
+
+
+                    // test if piece became queen
+                    if (pos1_y == 7) {
                         // write our new tower at pos1_x, pos1_y
-                        snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourtower);
+                        // TODO: Not sure if this ourqueen will cause problems:
+                        snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourqueen);
+                        // check for further capture moves, recursion!
+                        for (int new_direction = TOPLEFT; new_direction <= BOTTOMRIGHT; new_direction++) {
+                            // direction 0 -> 1, 2 nicht 3
+                            // direction 1 -> 0, 3 nicht 2
+                            // direction 2 -> 0, 3 nicht 1
+                            // direction 3 -> 1, 2 nicht 0
+                            // RULE: direction and new_direction CANNOT add to 3
 
-                        int move_length;
-                        int new_move_length;
+                            if (direction + new_direction != 3) {
+                                printf("new direction: %d\n", new_direction);
+                                move_length = strlen(tower_move);
+                                printf("old_movelength: %d \n", move_length);
+                                possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
+                                new_move_length = strlen(tower_move);
+                                printf("new_move_length: %d \n", new_move_length);
 
+                                if (new_move_length > move_length) {
+                                    printf("found capturing move\n");
+                                    break;
+                                }
+                            }
+
+
+                        }
+                    } else {
+                        // write our new tower at pos1_x, pos1_y
+                        snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourqueen);
 
                         // check for further capture moves, recursion!
                         for (int new_direction = TOPLEFT; new_direction <= BOTTOMRIGHT; new_direction++) {
@@ -672,13 +452,12 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                             // RULE: direction and new_direction CANNOT add to 3
 
                             if (direction + new_direction != 3) {
-                                //printf("new direction: %d\n", new_direction);
+                                printf("new direction: %d\n", new_direction);
                                 move_length = strlen(tower_move);
-                                //printf("old_movelength: %d \n", move_length );
-                                possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
+                                printf("old_movelength: %d \n", move_length);
+                                possibletowermoves(temp_board, pos1_x, pos1_y, new_direction);
                                 new_move_length = strlen(tower_move);
-                                //printf("new_move_length: %d \n", new_move_length );
-
+                                printf("new_move_length: %d \n", new_move_length);
 
                                 if (new_move_length > move_length) {
                                     printf("found capturing move\n");
@@ -686,18 +465,233 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                                 }
                             }
 
+
                         }
                     }
                 }
             }
-            else if (toppiece(board, pos_x, pos_y) == ' '){
-                    break;}
-            else if (toppiece(board, pos_x, pos_y) == ourtower){
+        } else if (toppiece(board, pos_x, pos_y) == ' ') {
+            if (direction == forwardmoves[0] || direction == forwardmoves[1]) {
+                if (strcmp(tower_move, "") == 0) {
+                    char pre_pos[POSLEN];
+                    snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
+                    char post_pos[POSLEN];
+                    snprintf(post_pos, POSLEN, "%s", translate_pos(pos_x, pos_y));
+                    snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+
+                    flag_all_possible_moves[num_moves] = BADMOVE;
+                }
+            }
+        }
+    }
+}
+
+
+/* FOR A QUEEN PIECE:
+   calculates the possible moves of ONE pieces in ONE direction,
+   this should be looped over in possiblemoves,
+   returns empty string if no moves availalbe */
+void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction) {
+    printf("I noticed that this is a problem for the queen \n");
+    int break_hit_a_piece = 0;
+    int pos_x = x;
+    int pos_y = y;
+
+    int *newpoint;
+    newpoint = moveindirection(direction, pos_x, pos_y);
+    pos_x = newpoint[0];
+    pos_y = newpoint[1];
+
+    // while not edge case and next square is blank
+    while (pos_x >= 0 && pos_x <= 7 && pos_y >= 0 && pos_y <= 7 && break_hit_a_piece == 0) {
+        int pos1_x;
+        int pos1_y;
+        int *nextpoint;
+        if (toppiece(board, pos_x, pos_y) == opponentstower) {
+            printf("I found a black tower\n");
+            nextpoint = moveindirection(direction, pos_x, pos_y);
+            pos1_x = nextpoint[0];
+            pos1_y = nextpoint[1];
+
+            // if field after the piece is not a an edge AND it's free
+            if (pos1_x >= 0 && pos1_x <= 7 && pos1_y >= 0 && pos1_y <= 7) {
+                if (toppiece(board, pos1_x, pos1_y) == ' ') {
+                    printf("going from %d,%d to %s\n", x, y, translate_pos(pos1_x, pos1_y));
+
+                    //we went through a piece, so there won't be further moves in this particular direction
+                    // -> breaking while-loop
                     break_hit_a_piece = 1;
-                    break;}
-            else if (toppiece(board, pos_x, pos_y) == ourqueen){
+
+                    // if first capture -> write pos:pos
+                    if (strcmp(tower_move, "") == 0) {
+                        char pre_pos[POSLEN];
+                        snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
+                        char post_pos[POSLEN];
+                        snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
+                        snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+
+                        flag_all_possible_moves[num_moves] = QUEENMOVE;
+                    }
+                        // otherwise we just want to write :pos onto the end
+                    else {
+                        // write ending pos into string
+                        char temp_pos[POSLEN];
+                        snprintf(temp_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
+
+                        // write all previous partial moves into string
+                        char already_moved[MAXMOVELEN];
+                        snprintf(already_moved, MAXMOVELEN, "%s", tower_move);
+
+                        // concat previous partial moves with new capturing move
+                        snprintf(tower_move, MAXMOVELEN - (strlen(already_moved) + 1), "%s:%s", already_moved,
+                                 temp_pos);
+
+                        // increment our move flag to show that this move is better
+                        flag_all_possible_moves[num_moves]++;
+                    }
+
+                    // make temp board for recursion
+                    char temp_board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
+                    memcpy(temp_board, board, sizeof(char) * MAXTOWERLEN * BOARDSIZE * BOARDSIZE);
+
+                    // make first move on the temp board
+                    // remove our whole tower at x, y
+                    memset(temp_board[x][y], 0, MAXTOWERLEN);
+
+                    // remove top piece from captured tower
+                    removetoppiece(temp_board, pos_x, pos_y);
+
+                    // write our new tower at pos1_x, pos1_y
+                    snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourqueen);
+
+                    // check for further capture moves, recursion!
+
+                    int move_length;
+                    int new_move_length;
+
+                    printf("we are going into the for_loop \n");
+                    for (int new_direction = TOPLEFT; new_direction <= BOTTOMRIGHT; new_direction++) {
+                        // direction 0 -> 1, 2 nicht 3
+                        // direction 1 -> 0, 3 nicht 2
+                        // direction 2 -> 0, 3 nicht 1
+                        // direction 3 -> 1, 2 nicht 0
+                        // RULE: direction and new_direction CANNOT add to 3
+
+
+
+                        if (direction + new_direction != 3) {
+                            //printf("new direction: %d\n", new_direction);
+                            move_length = strlen(tower_move);
+                            //printf("old_movelength: %d \n", move_length );
+                            possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
+                            new_move_length = strlen(tower_move);
+                            //printf("new_move_length: %d \n", new_move_length );
+
+                            if (new_move_length > move_length) {
+                                printf("found capturing move\n");
+                                break;
+                            }
+                        }
+
+
+                    }
+                } else {
                     break_hit_a_piece = 1;
-                    break;}
+                }
+            }
+        } else if (toppiece(board, pos_x, pos_y) == opponentsqueen) {
+            nextpoint = moveindirection(direction, pos_x, pos_y);
+            pos1_x = nextpoint[0];
+            pos1_y = nextpoint[1];
+
+            // if field after the piece is not a an edge AND it's free
+            if (pos1_x >= 0 && pos1_x <= 7 && pos1_y >= 0 && pos1_y <= 7) {
+
+                //we went through a piece, so there won't be further moves in this particular direction
+                // -> breaking while-loop
+                break_hit_a_piece = 1;
+
+                if (toppiece(board, pos1_x, pos1_y) == ' ') {
+                    // if first capture -> write pos:pos
+                    if (strcmp(tower_move, "") == 0) {
+                        char pre_pos[POSLEN];
+                        snprintf(pre_pos, POSLEN, "%s", translate_pos(x, y));
+                        char post_pos[POSLEN];
+                        snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
+                        snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
+
+                        flag_all_possible_moves[num_moves] = QUEENMOVE;
+                    }
+                        // otherwise we just want to write :pos onto the end
+                    else {
+                        // write ending pos into string
+                        char temp_pos[POSLEN];
+                        snprintf(temp_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
+
+                        // write all previous partial moves into string
+                        char already_moved[MAXMOVELEN];
+                        snprintf(already_moved, MAXMOVELEN, "%s", tower_move);
+
+                        // concat previous partial moves with new capturing move
+                        snprintf(tower_move, MAXMOVELEN - (strlen(already_moved) + 1), "%s:%s", already_moved,
+                                 temp_pos);
+
+                        // increment our move flag to show that this move is better
+                        flag_all_possible_moves[num_moves]++;
+                    }
+
+                    // make temp board for recursion
+                    char temp_board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN];
+                    memcpy(temp_board, board, sizeof(char) * MAXTOWERLEN * BOARDSIZE * BOARDSIZE);
+
+                    // make first move on the temp board
+                    // remove our whole tower at x, y
+                    memset(temp_board[x][y], 0, MAXTOWERLEN);
+
+                    // remove top piece from captured tower
+                    removetoppiece(temp_board, pos_x, pos_y);
+
+                    // write our new tower at pos1_x, pos1_y
+                    snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourtower);
+
+                    int move_length;
+                    int new_move_length;
+
+
+                    // check for further capture moves, recursion!
+                    for (int new_direction = TOPLEFT; new_direction <= BOTTOMRIGHT; new_direction++) {
+                        // direction 0 -> 1, 2 nicht 3
+                        // direction 1 -> 0, 3 nicht 2
+                        // direction 2 -> 0, 3 nicht 1
+                        // direction 3 -> 1, 2 nicht 0
+                        // RULE: direction and new_direction CANNOT add to 3
+
+                        if (direction + new_direction != 3) {
+                            //printf("new direction: %d\n", new_direction);
+                            move_length = strlen(tower_move);
+                            //printf("old_movelength: %d \n", move_length );
+                            possibletowermoves_queen(temp_board, pos1_x, pos1_y, new_direction);
+                            new_move_length = strlen(tower_move);
+                            //printf("new_move_length: %d \n", new_move_length );
+
+
+                            if (new_move_length > move_length) {
+                                printf("found capturing move\n");
+                                break;
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+        else if (toppiece(board, pos_x, pos_y) == ourtower) {
+            break_hit_a_piece = 1;
+
+        } else if (toppiece(board, pos_x, pos_y) == ourqueen) {
+            break_hit_a_piece = 1;
+
+        }
 
 
         // increment to the edge of the board or another piece
@@ -711,8 +705,8 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
 /* returns the value of the top piece from board coordinates */
 char toppiece(char board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN], int x, int y) {
     char piece = ' ';
-    if (board[x][y][strlen(board[x][y])-1]) {
-        piece = board[x][y][strlen(board[x][y])-1];
+    if (board[x][y][strlen(board[x][y]) - 1]) {
+        piece = board[x][y][strlen(board[x][y]) - 1];
     }
     return piece;
 }
@@ -732,7 +726,7 @@ void removetoppiece(char board[BOARDSIZE][BOARDSIZE][MAXTOWERLEN], int x, int y)
 
 /* translates an x and y coord into a protocoll readable format
    for example: 0, 0 becomes A1 */
-char* translate_pos(int x, int y) {
+char *translate_pos(int x, int y) {
     static char position[POSLEN];
     memset(position, 0, POSLEN);
 
@@ -767,47 +761,46 @@ char* translate_pos(int x, int y) {
     }
 
     // the + '0' converts the int to a char with the same value
-    position[1] = y+1 + '0';
+    position[1] = y + 1 + '0';
 
     return position;
 }
 
 /* increments and decrements the location of a piece based on a direction */
-int* moveindirection(int direction, int x, int y) {
-       static int newpoint[2];
-       newpoint[0] = x;
-       newpoint[1] = y;
+int *moveindirection(int direction, int x, int y) {
+    static int newpoint[2];
+    newpoint[0] = x;
+    newpoint[1] = y;
 
-        switch (direction) {
-            case TOPLEFT:
-                newpoint[0]--;
-                newpoint[1]++;
-                break;
-            case TOPRIGHT:
-                newpoint[0]++;
-                newpoint[1]++;
-                break;
-            case BOTTOMLEFT:
-                newpoint[0]--;
-                newpoint[1]--;
-                break;
-            case BOTTOMRIGHT:
-                newpoint[0]++;
-                newpoint[1]--;
-                break;
-            default:
-                break;
-        }
+    switch (direction) {
+        case TOPLEFT:
+            newpoint[0]--;
+            newpoint[1]++;
+            break;
+        case TOPRIGHT:
+            newpoint[0]++;
+            newpoint[1]++;
+            break;
+        case BOTTOMLEFT:
+            newpoint[0]--;
+            newpoint[1]--;
+            break;
+        case BOTTOMRIGHT:
+            newpoint[0]++;
+            newpoint[1]--;
+            break;
+        default:
+            break;
+    }
 
-        return newpoint;
+    return newpoint;
 }
 
 void gameover() {
     printf("---------- GAMEOVER ----------\n");
     if (our_playernum == rcv_info->game_info.winner) {
         printf("Congratulations, your AI won!\n");
-    }
-    else {
+    } else {
         printf("Too bad, your AI is stupid...\n");
     }
 }
