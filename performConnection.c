@@ -157,7 +157,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int *s
 
                             // [2] iterate through all additional players
                             //     if total players is 1 then this code is skipped and we procede
-                            for (size_t j = 1; j < server_totalplayers; j++) {
+                            for (int j = 1; j < server_totalplayers; j++) {
                                 // scan every player line and store in array of players
                                 char namewithoutbool[NAMELEN];
 
@@ -248,7 +248,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int *s
 
                             if (boardsreceived == 0) {
                                 // add our local structs to the shared memory segment
-                                for (size_t n = 0; n <= game_and_players.game_info.total_players - 1; n++) {
+                                for (int n = 0; n <= game_and_players.game_info.total_players - 1; n++) {
                                     shm_info->all_players_info[n] = game_and_players.all_players_info[n];
                                 }
                             }

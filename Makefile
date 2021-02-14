@@ -1,9 +1,9 @@
 CC = gcc
-CFLAGS = -Wall -g -std=gnu11
+CFLAGS = -Wall -Wextra -Werror -g -std=gnu11
 LDFLAGS = -lm -lpthread
-TARGETS = sysprakclient
-SRCFILES = sysprakclient.c performConnection.c config.c sharedMemory.c printBoard.c thinker.c
-OBJECTS = sysprakclient.o performConnection.o config.o sharedMemory.o printBoard.o thinker.o
+TARGETS = sysprak-client
+SRCFILES = sysprak-client.c performConnection.c config.c sharedMemory.c printBoard.c thinker.c
+OBJECTS = sysprak-client.o performConnection.o config.o sharedMemory.o printBoard.o thinker.o
 
 all: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TARGETS) $(OBJECTS)
@@ -15,4 +15,4 @@ clean:
 	rm -f *.o $(TARGETS)
 
 play:
-	./sysprakclient -g $(GAME_ID) -p $(PLAYER) -c $(CONF_FILE)
+	./sysprak-client -g $(GAME_ID) -p $(PLAYER) -c $(CONF_FILE)
