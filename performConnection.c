@@ -26,8 +26,8 @@ char client_msg[MSGLEN];
 int result;
 int packets;
 int bytes_received;
-char** dividedServerMsg;
-char* tokenArray[TOKENLEN];
+char **dividedServerMsg;
+char *tokenArray[TOKENLEN];
 int boardsreceived = 0;
 
 // The variables below are used to store sscanf matches
@@ -46,12 +46,12 @@ int player_id;
 char winner[MATCHLEN];
 
 // Create ptr to all_info struct for shared memory data
-all_info * shm_info;
+all_info *shm_info;
 
 // Create necessary structs
 all_info game_and_players;
 
-int serverConnect(int socket_file_descriptor, char game_id[], int player, int * shmid_ptr) {
+int serverConnect(int socket_file_descriptor, char game_id[], int player, int *shmid_ptr) {
 
     /* Enter the PID and PPID into the game_info struct */
     game_and_players.game_info.connector_id = getpid();
@@ -73,7 +73,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
     FD_SET(fd[0], &readfds);
 
     // check for highest descriptor number
-    if (fd[0] > max_sd){
+    if (fd[0] > max_sd) {
         max_sd = fd[0];
     }
 
@@ -102,9 +102,8 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             // send: client version, major version must match!!
                             snprintf(client_msg, MSGLEN, "VERSION 2.3\n");
                             sendClientMsg(socket_file_descriptor);
-                        }
-
-                        else if (sscanf(current, "+ Client version accepted - please send %s to join", server_placeholder) == 1){
+                        } else if (sscanf(current, "+ Client version accepted - please send %s to join",
+                                          server_placeholder) == 1) {
                             snprintf(client_msg, MSGLEN, "ID %s\n", game_id);
                             sendClientMsg(socket_file_descriptor);
 
@@ -112,50 +111,47 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             memset(server_placeholder, 0, MATCHLEN);
                         }
 
-                        // Check if the game that we want to join is a Bashni game. If it is, send preferred player number
-                        else if (sscanf(current, "+ PLAYING %s", server_gamename) == 1){
+                            // Check if the game that we want to join is a Bashni game. If it is, send preferred player number
+                        else if (sscanf(current, "+ PLAYING %s", server_gamename) == 1) {
                             if (strcmp(server_gamename, "Bashni") == 0) {
                                 // Since game name could be anything, there's nothing to parse
                                 // so I'm just choosing to print the next server token and incrementing i to skip it in the next for-loop cyle
-                                printf("S: %s\n", dividedServerMsg[i+1]);
+                                printf("S: %s\n", dividedServerMsg[i + 1]);
 
                                 // put the game name into our data structure
                                 // the "+= 2" is to increment the pointer so our string doesn't include the "+ " prefix
-                                snprintf(game_and_players.game_info.game_name, MATCHLEN, "%s", dividedServerMsg[i+1] += 2);
+                                snprintf(game_and_players.game_info.game_name, MATCHLEN, "%s",
+                                         dividedServerMsg[i + 1] += 2);
 
                                 i++;
 
                                 //if a player has been specified in the config then send it, otherwise simply send player
                                 if (player > 0) {
-                                    snprintf(client_msg, MSGLEN, "PLAYER %d\n", player-1);
-                                }
-                                else {
+                                    snprintf(client_msg, MSGLEN, "PLAYER %d\n", player - 1);
+                                } else {
                                     snprintf(client_msg, MSGLEN, "PLAYER\n");
                                 }
                                 // sending
                                 sendClientMsg(socket_file_descriptor);
-                            }
-                            else {
+                            } else {
                                 perror("sscanf");
                                 fprintf(stderr, "Wrong gametype, connect to a Bashni game\n");
                                 exit(EXIT_FAILURE);
                             }
-                        }
-
-                        else if (sscanf(current, "+ YOU %d %[^\t\n]", &our_playernum, our_playername) == 2) {
+                        } else if (sscanf(current, "+ YOU %d %[^\t\n]", &our_playernum, our_playername) == 2) {
                             // put the player number and name into our data structure
                             game_and_players.game_info.our_playernum = our_playernum;
                             // put our player info into the array of players
                             game_and_players.all_players_info[0].playernum = our_playernum;
                             snprintf(game_and_players.all_players_info[0].name, MATCHLEN, "%s", our_playername);
-                            printf("player name from server: %s \n",our_playername);
+                            printf("player name from server: %s \n", our_playername);
                             game_and_players.all_players_info[0].flag = 1;
                         }
 
-                        /* 1. write total number of players to struct
-                           2. loop through all players and write to players struct array
-                           3. create shared memory segment with total players for size */
-                        else if (sscanf(current, "+ TOTAL %d", &server_totalplayers) == 1){
+                            /* 1. write total number of players to struct
+                               2. loop through all players and write to players struct array
+                               3. create shared memory segment with total players for size */
+                        else if (sscanf(current, "+ TOTAL %d", &server_totalplayers) == 1) {
                             // [1] put the total number of players into our data structure
                             game_and_players.game_info.total_players = server_totalplayers;
 
@@ -165,8 +161,10 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                                 // scan every player line and store in array of players
                                 char namewithoutbool[NAMELEN];
 
-                                sscanf(dividedServerMsg[i+j], "+ %d %[^\t\n] %d", &game_and_players.all_players_info[j].playernum, namewithoutbool, &game_and_players.all_players_info[j].flag);
-                                printf("S: %s\n", dividedServerMsg[i+j]);
+                                sscanf(dividedServerMsg[i + j], "+ %d %[^\t\n] %d",
+                                       &game_and_players.all_players_info[j].playernum, namewithoutbool,
+                                       &game_and_players.all_players_info[j].flag);
+                                printf("S: %s\n", dividedServerMsg[i + j]);
                                 // time to remove the trailing flag on the name
                                 namewithoutbool[strlen(namewithoutbool) - 2] = '\0';
                                 snprintf(game_and_players.all_players_info[j].name, NAMELEN, "%s", namewithoutbool);
@@ -178,10 +176,10 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             int shmid_for_info = create_shared_memory(game_and_players.game_info.total_players);
 
                             // give that new shmid to our other process
-                            * shmid_ptr = shmid_for_info;
+                            *shmid_ptr = shmid_for_info;
 
                             // attach to shared memory segment
-                            shm_info = (all_info*) shmat(shmid_for_info, NULL, 0);
+                            shm_info = (all_info *) shmat(shmid_for_info, NULL, 0);
                             if (shm_info == (void *) -1) {
                                 printf("Error attaching shared memory.\n");
                                 perror("shmat");
@@ -190,51 +188,43 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             printf("----------- SHMID [2] -----------\n");
                             printf("            %d\n", shmid_for_info);
                             printf("---------------------------------\n");
-                        }
-
-                        else if (sscanf(current, "+ ENDPLA%s", server_placeholder) == 1){
+                        } else if (sscanf(current, "+ ENDPLA%s", server_placeholder) == 1) {
                             memset(server_placeholder, 0, MATCHLEN);
-                        }
-
-                        else if (sscanf(current, "+ MOVE %d", &server_max_moves) == 1){
+                        } else if (sscanf(current, "+ MOVE %d", &server_max_moves) == 1) {
                             game_and_players.game_info.max_moves = server_max_moves;
-                        }
-
-                        else if (sscanf(current, "+ PIECESLIST %d", &server_total_pieces) == 1){
+                        } else if (sscanf(current, "+ PIECESLIST %d", &server_total_pieces) == 1) {
                             game_and_players.game_info.total_pieces = server_total_pieces;
                             /* fill game board with 0's */
                             for (int x = 0; x < 8; x++) {
-                                for (int y = 0; y < 8; y++){
+                                for (int y = 0; y < 8; y++) {
                                     memset(game_and_players.game_info.board[x][y], 0, MAXTOWERLEN);
                                 }
                             }
-                        }
-
-                        else if (sscanf(current, "+ %c@%c%d", piece, &horizontal, &vertical) == 3){
+                        } else if (sscanf(current, "+ %c@%c%d", piece, &horizontal, &vertical) == 3) {
                             switch (horizontal) {
                                 case 'A':
-                                    writetower(game_and_players.game_info.board, 0, vertical-1, piece);
+                                    writetower(game_and_players.game_info.board, 0, vertical - 1, piece);
                                     break;
                                 case 'B':
-                                    writetower(game_and_players.game_info.board, 1, vertical-1, piece);
+                                    writetower(game_and_players.game_info.board, 1, vertical - 1, piece);
                                     break;
                                 case 'C':
-                                    writetower(game_and_players.game_info.board, 2, vertical-1, piece);
+                                    writetower(game_and_players.game_info.board, 2, vertical - 1, piece);
                                     break;
                                 case 'D':
-                                    writetower(game_and_players.game_info.board, 3, vertical-1, piece);
+                                    writetower(game_and_players.game_info.board, 3, vertical - 1, piece);
                                     break;
                                 case 'E':
-                                    writetower(game_and_players.game_info.board, 4, vertical-1, piece);
+                                    writetower(game_and_players.game_info.board, 4, vertical - 1, piece);
                                     break;
                                 case 'F':
-                                    writetower(game_and_players.game_info.board, 5, vertical-1, piece);
+                                    writetower(game_and_players.game_info.board, 5, vertical - 1, piece);
                                     break;
                                 case 'G':
-                                    writetower(game_and_players.game_info.board, 6, vertical-1, piece);
+                                    writetower(game_and_players.game_info.board, 6, vertical - 1, piece);
                                     break;
                                 case 'H':
-                                    writetower(game_and_players.game_info.board, 7, vertical-1, piece);
+                                    writetower(game_and_players.game_info.board, 7, vertical - 1, piece);
                                     break;
                                 default:
                                     printf("Not a valid position");
@@ -245,16 +235,12 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             memset(piece, 0, PIECESLEN);
                             horizontal = -1;
                             vertical = -1;
-                        }
-
-                        else if (sscanf(current, "+ ENDPIECES%s", server_placeholder) == 1){
+                        } else if (sscanf(current, "+ ENDPIECES%s", server_placeholder) == 1) {
                             snprintf(client_msg, MSGLEN, "THINKING\n");
                             // sending
                             sendClientMsg(socket_file_descriptor);
                             memset(server_placeholder, 0, MATCHLEN);
-                        }
-
-                        else if (sscanf(current, "+ OKTHI%s", server_placeholder) == 1){
+                        } else if (sscanf(current, "+ OKTHI%s", server_placeholder) == 1) {
                             memset(server_placeholder, 0, MATCHLEN);
 
                             // write new gameboard into shared memory
@@ -274,48 +260,39 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             kill(game_and_players.game_info.thinker_id, SIGUSR1);
 
                             // read next move
-                            char rcv_move[MSGLEN-6];
+                            char rcv_move[MSGLEN - 6];
 
                             // wait for activity in one of the two sockets
                             int activity;
-                            activity = select(max_sd+1, &readfds, NULL, NULL, NULL);
+                            activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
 
                             if (activity == -1)
                                 perror("select()");
                             else if (activity) {
-                                if (FD_ISSET(fd[0] , &readfds)) {
+                                if (FD_ISSET(fd[0], &readfds)) {
                                     printf("Data is available now.\n");
-                                    read(fd[0],  rcv_move, MSGLEN);
+                                    read(fd[0], rcv_move, MSGLEN);
                                     printf("received move: %s", rcv_move);
                                     snprintf(client_msg, MSGLEN, "PLAY %s", rcv_move);
                                     sendClientMsg(socket_file_descriptor);
-                                    }
-                                else if(FD_ISSET(socket_file_descriptor , &readfds)){
-                                printf("Data from server.\n");
-                                receiveServerMsg(socket_file_descriptor);
-                                printf("Error: %s\n", server_msg);
+                                } else if (FD_ISSET(socket_file_descriptor, &readfds)) {
+                                    printf("Data from server.\n");
+                                    receiveServerMsg(socket_file_descriptor);
+                                    printf("Error: %s\n", server_msg);
                                 }
                             }
-                        }
-
-                        else if (sscanf(current, "+ WA%s", server_placeholder) == 1){
+                        } else if (sscanf(current, "+ WA%s", server_placeholder) == 1) {
                             memset(server_placeholder, 0, MATCHLEN);
 
                             snprintf(client_msg, MSGLEN, "OKWAIT\n");
                             sendClientMsg(socket_file_descriptor);
-                        }
-
-                        else if (sscanf(current, "+ MOVEO%s", server_placeholder) == 1) {
+                        } else if (sscanf(current, "+ MOVEO%s", server_placeholder) == 1) {
                             memset(server_placeholder, 0, MATCHLEN);
-                        }
-
-                        else if (sscanf(current, "+ GAMEOV%s", server_placeholder) == 1) {
+                        } else if (sscanf(current, "+ GAMEOV%s", server_placeholder) == 1) {
                             memset(server_placeholder, 0, MATCHLEN);
                             game_and_players.game_info.gameover = 1;
                             shm_info->game_info.gameover = game_and_players.game_info.gameover;
-                        }
-
-                        else if (sscanf(current, "+ PLAYER0WON %s", winner) == 1) {
+                        } else if (sscanf(current, "+ PLAYER0WON %s", winner) == 1) {
                             player_id = 0;
                             if (strcmp(winner, "Yes") == 0) {
                                 game_and_players.game_info.winner = player_id;
@@ -323,9 +300,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             }
                             player_id = -1;
                             memset(winner, 0, MATCHLEN);
-                        }
-
-                        else if (sscanf(current, "+ PLAYER1WON %s", winner) == 1) {
+                        } else if (sscanf(current, "+ PLAYER1WON %s", winner) == 1) {
                             player_id = 1;
                             if (strcmp(winner, "Yes") == 0) {
                                 game_and_players.game_info.winner = player_id;
@@ -333,11 +308,9 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             }
                             player_id = -1;
                             memset(winner, 0, MATCHLEN);
-                        }
-
-                        else if (sscanf(current, "+ QUI%s", server_placeholder) == 1) {
+                        } else if (sscanf(current, "+ QUI%s", server_placeholder) == 1) {
                             memset(server_placeholder, 0, MATCHLEN);
-                            
+
                             // set think-flag in shared memory
                             shm_info->game_info.think_flag = 1;
 
@@ -348,9 +321,7 @@ int serverConnect(int socket_file_descriptor, char game_id[], int player, int * 
                             shmdt(shmid_ptr);
                             shmdt(shm_info);
                             exit(EXIT_SUCCESS);
-                        }
-                        
-                        else {
+                        } else {
                             perror("sscanf");
                             fprintf(stderr, "could not parse\n");
                             exit(EXIT_FAILURE);
@@ -381,24 +352,23 @@ void receiveServerMsg(int socket_file_descriptor) {
 
     /* receive all packets and concat onto server_msg */
     do {
-        result = recv(socket_file_descriptor, &server_msg[bytes_received], MSGLEN-bytes_received, 0);
+        result = recv(socket_file_descriptor, &server_msg[bytes_received], MSGLEN - bytes_received, 0);
         packets++;
-        if (result > 0 ) {
-            bytes_received+=result;
-        }
-        else {
+        if (result > 0) {
+            bytes_received += result;
+        } else {
             printf("Error: %i \n", result);
             exit(EXIT_FAILURE);
         }
         if (bytes_received >= MSGLEN) {
             printf("Buffer overflow");
-        break;
+            break;
         }
-    } while(server_msg[bytes_received-1] != '\n');
+    } while (server_msg[bytes_received - 1] != '\n');
 }
 
 // divides Server Message into an array of strings, so they can be parsed separately
-char** divideServerMsg(char *server_msg, char **tokenArray){
+char **divideServerMsg(char *server_msg, char **tokenArray) {
     memset(tokenArray, 0, MSGLEN);
     char *saveptr;
 
@@ -406,7 +376,7 @@ char** divideServerMsg(char *server_msg, char **tokenArray){
     char *token;
     char *current = server_msg;
 
-    while((token = strtok_r(current, "\n", &saveptr)) != NULL){
+    while ((token = strtok_r(current, "\n", &saveptr)) != NULL) {
         tokenArray[num_tokens] = token;
         num_tokens++;
         current = NULL;
@@ -419,8 +389,7 @@ char** divideServerMsg(char *server_msg, char **tokenArray){
 void sendClientMsg(int socket_file_descriptor) {
     if (send(socket_file_descriptor, client_msg, strlen(client_msg), 0) < 0) {
         printf("Send Client message failed\n");
-    }
-    else {
+    } else {
         printf("C: %s", client_msg);
     }
 

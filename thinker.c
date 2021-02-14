@@ -684,8 +684,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                     }
                 }
             }
-        }
-        else if (toppiece(board, pos_x, pos_y) == ourtower) {
+        } else if (toppiece(board, pos_x, pos_y) == ourtower) {
             break_hit_a_piece = 1;
 
         } else if (toppiece(board, pos_x, pos_y) == ourqueen) {
