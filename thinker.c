@@ -27,7 +27,7 @@
 #define BADMOVE 1
 #define BETTERMOVE 2
 #define EVENBETTERMOVE 3
-#define QUEENMOVE 10
+#define QUEENMOVE 2
 
 // 5 for first move, 11 max partial moves with 3 chars each, plus nullbyte
 #define MAXMOVELEN 5 + 11*3 + 1
@@ -90,13 +90,9 @@ void think(int *shmid_ptr) {
             forwardmoves[1] = BOTTOMRIGHT;
 
         }
-
-
         first_think = 1;
     }
-
-
-
+    
     // check if think_flag was set by the connector process
     if (rcv_info->game_info.think_flag == 1) {
         // immediately set think_flag back to zero
@@ -136,21 +132,33 @@ void think(int *shmid_ptr) {
     } else {
         printf("error: thinker_flag not set.\n");
     }
-
-
 }
 
 /* takes an array of moves and selects the best one */
 int bestmove() {
-    int best_index = -1;
+    /* loop through all flags to find the maximum */
     int best_rating = 0;
     for (int i = 0; i < MAXMOVES; i++) {
         if (flag_all_possible_moves[i] > best_rating) {
             best_rating = flag_all_possible_moves[i];
-            best_index = i;
         }
     }
-    return best_index;
+
+    /* add all moves with flag == best_rating to an array */
+    int best_indexes[MAXMOVES];
+    int best_moves_added = 0;
+    for (int i = 0; i < MAXMOVES; i++) {
+        if (flag_all_possible_moves[i] == best_rating) {
+            best_indexes[best_moves_added] = i;
+            best_moves_added++;
+        }
+    }
+
+    /* select a random number (index) of the best moves array */
+    int selected_index = rand() % (best_moves_added);
+    int final_index = best_indexes[selected_index];
+
+    return final_index;
 }
 
 /* calculates the possible moves of all of our pieces */
@@ -486,7 +494,6 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
     }
 }
 
-
 /* FOR A QUEEN PIECE:
    calculates the possible moves of ONE pieces in ONE direction,
    this should be looped over in possiblemoves,
@@ -620,7 +627,7 @@ void possibletowermoves_queen(char board[8][8][25], int x, int y, int direction)
                         snprintf(post_pos, POSLEN, "%s", translate_pos(pos1_x, pos1_y));
                         snprintf(tower_move, MAXMOVELEN, "%s:%s", pre_pos, post_pos);
 
-                        flag_all_possible_moves[num_moves] = QUEENMOVE;
+                        flag_all_possible_moves[num_moves] = EVENBETTERMOVE;
                     }
                         // otherwise we just want to write :pos onto the end
                     else {
