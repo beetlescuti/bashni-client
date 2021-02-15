@@ -3,7 +3,7 @@
      / _  / _ `(_-</ _ \/ _ \/ / 
     /____/\_,_/___/_//_/_//_/_/  
 
-### Baschni Game Client
+# Baschni Game Client
 
 This clients connects to a dedicated game server and plays a game of Bashni. The Project was developed as part of the Systempraktikum in the winter semester of 20/21 at Ludwig-Maximilians-University Munich by Lukas Jost, Svea Meyer and Soren Little.
 
