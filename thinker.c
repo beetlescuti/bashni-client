@@ -57,6 +57,7 @@ char ourtower;
 char opponentsqueen;
 char opponentstower;
 int forwardmoves[2];
+int promoting_row;
 
 
 void think(int *shmid_ptr) {
@@ -82,6 +83,7 @@ void think(int *shmid_ptr) {
             opponentstower = 'b';
             forwardmoves[0] = TOPLEFT;
             forwardmoves[1] = TOPRIGHT;
+            promoting_row = 7;
         } else {
             ourqueen = 'B';
             ourtower = 'b';
@@ -89,14 +91,14 @@ void think(int *shmid_ptr) {
             opponentstower = 'w';
             forwardmoves[0] = BOTTOMLEFT;
             forwardmoves[1] = BOTTOMRIGHT;
-
+            promoting_row = 0;
         }
         first_think = 1;
-        
+
         // set seed for rand using on first think
         srand(time(0));
     }
-    
+
     // check if think_flag was set by the connector process
     if (rcv_info->game_info.think_flag == 1) {
         // immediately set think_flag back to zero
@@ -306,7 +308,7 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
                     move_length = strlen(tower_move);
 
                     // test if piece became queen
-                    if (pos1_y == 7) {
+                    if (pos1_y == promoting_row) {
                         // write our new tower at pos1_x, pos1_y
                         snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourqueen);
                         // check for further capture moves, recursion!
@@ -423,7 +425,7 @@ void possibletowermoves(char board[8][8][25], int x, int y, int direction) {
 
 
                     // test if piece became queen
-                    if (pos1_y == 7) {
+                    if (pos1_y == promoting_row) {
                         // write our new tower at pos1_x, pos1_y
                         // TODO: Not sure if this ourqueen will cause problems:
                         snprintf(temp_board[pos1_x][pos1_y], MAXTOWERLEN, "%c", ourqueen);
