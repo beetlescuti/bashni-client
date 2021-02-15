@@ -1,5 +1,8 @@
+       ___           __        _ 
+      / _ )___ ____ / /  ___  (_)
+     / _  / _ `(_-</ _ \/ _ \/ / 
+    /____/\_,_/___/_//_/_//_/_/  
 
-                             
 ### Baschni Game Client
 
 This clients connects to a dedicated game server and plays a game of Bashni. The Project was developed as part of the Systempraktikum in the winter semester of 20/21 at Ludwig-Maximilians-University Munich by Lukas Jost, Svea Meyer and Soren Little.
@@ -20,7 +23,3 @@ Compilation can be automated through command **make** while **make play** execut
 
 After succesfull execution the command **make clean** will remove the object files from the directory.
 
-   ___           __        _ 
-  / _ )___ ____ / /  ___  (_)
- / _  / _ `(_-</ _ \/ _ \/ / 
-/____/\_,_/___/_//_/_//_/_/  
