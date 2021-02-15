@@ -12,6 +12,7 @@
 #include <sys/shm.h>
 #include <signal.h>
 #include <limits.h>
+#include <time.h>
 
 #include "thinker.h"
 #include "sysprakclient.h"
@@ -91,6 +92,9 @@ void think(int *shmid_ptr) {
 
         }
         first_think = 1;
+        
+        // set seed for rand using on first think
+        srand(time(0));
     }
     
     // check if think_flag was set by the connector process
