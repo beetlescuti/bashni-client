@@ -1,3 +1,9 @@
+###    ___           __        _ 
+###   / _ )___ ____ / /  ___  (_)
+###  / _  / _ `(_-</ _ \/ _ \/ / 
+### /____/\_,_/___/_//_/_//_/_/  
+                             
+
 ### Baschni Game Client
 
 This clients connects to a dedicated game server and plays a game of Bashni. The Project was developed as part of the Systempraktikum in the winter semester of 20/21 at Ludwig-Maximilians-University Munich by Lukas Jost, Svea Meyer and Soren Little.
@@ -12,22 +18,9 @@ The environmental variable PLAYER is not mandatory (the first available player w
 
 Compilation can be automated through command **make** while **make play** executes the program using the environmental variables specified. If using flags, execution using the format ./sysprak-client -g -p -c is necessary. 
 
-    -g *game ID*
-    -p *player number*
-    -c *specify a config file* [not necessary]
+    -g game ID
+    -p player number
+    -c specify a config file [not necessary]
 
 After succesfull execution the command **make clean** will remove the object files from the directory.
 
-      -~·-.'´::`;-:~.~·–.,   °               ,.-:~:-.                              __  '           ,:'/¯/`:,       .·/¯/`:,'            .:':'`:·          ,:´'`;' ‘         ',:'/¯/`:,   
-  /:::::/::::/::::::::::::::'`,                /':::::::::'`,                      ,·:'´/::::/'`;·.,      /:/_/::::/';    /:/_/::::';         /:::::::/`·,      /::::/;‘         /:/_/::::/';' 
- /-~·-'·´¯`·-~·––  ::;:::::'i'            /;:-·~·-:;':::',                 .:´::::/::::/:::::::`;   /:'     '`:/::;  /·´    `·,::';       /:·*'`·:/:::::' , /·´'`;/::';'       /:'     '`:/::;‘
- '`·,                       '`;::';         ,'´          '`:;::`,              /:;:· '´ ¯¯'`^·-;::::/' ‘ ;         ';:';  ;         ';:;     ,'         `:;::::'`i    ';:::';       ;         ';:';‘
-    '`i       'i*^~;          'i / °      /                `;::\            /·´           _   '`;/‘    |         'i::i  i         'i:';°    ;            '`;:::'i    'i::::i       |         'i::i 
-     ';       ; / ,·          .'/',      ,'                   '`,::;         'i            ;::::'`;*      ';        ;'::/¯/;        ';:;‘'    i               `;:';    'i:::i'       ';        ;'::i 
-     ';      ;' ;´         ~´;:::'i°   i'       ,';´'`;         '\:::', ‘      `;           '`;:::::'`:,   'i        i':/_/:';        ;:';°    i      ,          \|     '|:::i°      'i        'i::i' 
-   /´:;     ;–·:`:,          '`;:/° ,'        ;' /´:`';         ';:::'i‘        `·,           '`·;:::::';  ;       i·´   '`·;       ;:/°     |     ,'`,                i:;'' ‚       ;       'i::;' 
-,/::;:'\,  '/::::::;'           'i/' ° ;        ;/:;::;:';         ',:::;      ,~:-'`·,           `:;::/'  ';      ;·,  '  ,·;      ;/'       'i    'i:::i',             ';/'          ';       i:/'  
-'.     '` '´·–·~*´           ,'  '  'i        '´        `'         'i::'/     /:::::::::';           ';/     ';    ';/ '`'*'´  ';    ';/' '‘      'i     ;::/ \           ;/'             ';     ;/ °  
-  ` ·-.,                 ,-·´   '   ¦       '/`' *^~-·'´\         ';'/'‚   ,:~·- . -·'´          ,'´        \   /          '\   '/'           \    'i/    '`·,      ,''                ';   / °    
-         '`*^~·- ·^*'´     '       '`., .·´              `·.,_,.·´  ‚   '`·,               , ·'´           '`'´             `''´   '          '`~´         '`·–·'´'                  `'´       °
-                   '                                                          '`*^·–·^*'´'           ‘                      '                                 ‘                     ‘         
