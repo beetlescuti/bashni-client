@@ -1,7 +1,4 @@
-   ___           __        _ 
-  / _ )___ ____ / /  ___  (_)
- / _  / _ `(_-</ _ \/ _ \/ / 
-/____/\_,_/___/_//_/_//_/_/  
+
                              
 ### Baschni Game Client
 
@@ -22,3 +19,8 @@ Compilation can be automated through command **make** while **make play** execut
     -c specify a config file [not necessary]
 
 After succesfull execution the command **make clean** will remove the object files from the directory.
+
+   ___           __        _ 
+  / _ )___ ____ / /  ___  (_)
+ / _  / _ `(_-</ _ \/ _ \/ / 
+/____/\_,_/___/_//_/_//_/_/  
