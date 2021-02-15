@@ -25,9 +25,6 @@
 int fd[2];
 int * parent_shmid_ptr;
 
-// TODO: Errormessage when no command line arguments are passed
-// TODO: General Error handling
-
 int main(int argc, char*argv[]) {
 
     /* Initialize user parameters */
@@ -38,8 +35,6 @@ int main(int argc, char*argv[]) {
        but will be overriden if put in command line 
        using the flag -c */
     char conf_file[CONFFILENAMELEN] = "client.conf";
-
-    // TODO: do we want GAME_ID and PLAYER to move to the .conf file??
 
     /* Read Parameters from Commandline */
     int ret;
@@ -69,9 +64,9 @@ int main(int argc, char*argv[]) {
 
     /* Create a shared memory to store the shmid of our other shared memory */
     int shmid = shmget(IPC_PRIVATE, sizeof(int), IPC_CREAT | 0644);
-    printf("----------- SHMID [1] -----------\n");
-    printf("            %d\n", shmid);
-    printf("--------------------------------\n");
+    // printf("----------- SHMID [1] -----------\n");
+    // printf("            %d\n", shmid);
+    // printf("--------------------------------\n");
 
     /*Wir erstellen eine Pipe*/
     if (pipe(fd) < 0) {
@@ -90,7 +85,7 @@ int main(int argc, char*argv[]) {
         int *child_shmid_ptr;
         child_shmid_ptr = (int *) shmat(shmid, NULL, 0);
 
-        printf("Child process ->  PPID: %d, PID: %d\n", getppid(), getpid());
+        // printf("Child process ->  PPID: %d, PID: %d\n", getppid(), getpid());
 
         /* Enter Prolog Phase */
         serverConnect(socket_file_descriptor, game_id, player, child_shmid_ptr);
@@ -98,13 +93,11 @@ int main(int argc, char*argv[]) {
     } else { /* Thinker (Parent Process) */
         close(fd[0]); //Leseseite schließen
 
-
-
         // shmid_ptr is just used to store the shmid of the actual shared memory segment
         parent_shmid_ptr = (int *) shmat(shmid, NULL, 0);
 
-        printf("Parent process -> PID: %d\n", getpid());
-        printf("Waiting for child processes to finish...\n");
+        // printf("Parent process -> PID: %d\n", getpid());
+        // printf("Waiting for child processes to finish...\n");
 
         wait(NULL);
 
@@ -173,7 +166,7 @@ int getSocketInfo(int argc, char *argv[], char hostname[], char portnumber[]) {
 
 /* Maps signals to handler functions */
 void sighandler(int signalkey) {
-    printf("Caught signal %d\n", signalkey);
+    // printf("Caught signal %d\n", signalkey);
     switch (signalkey) {
         case SIGUSR1:
             think(parent_shmid_ptr);

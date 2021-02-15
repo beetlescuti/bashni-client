@@ -8,7 +8,6 @@
 configuration read_conf_file(char filename[]) {
 
     /* read in a config file */
-    // TODO add if/else for command line parameter
     FILE * config_file = fopen(filename, "r");
 
     /* initialize a configuration structure */
